@@ -1,0 +1,90 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}PHP2Symfony AI | Modernize Legacy PHP{% endblock %}
+
+{% block body %}
+<section class="hero">
+    <div class="container">
+        <div class="hero-content text-center mx-auto">
+            <span class="hero-badge">
+                ✦ AI-Powered PHP Modernization
+            </span>
+
+            <h1>
+                Give your legacy PHP code
+                <span class="gradient-text">a modern future.</span>
+            </h1>
+
+            <p class="hero-description">
+                Analyze legacy applications, understand their architecture,
+                and accelerate migration to Symfony with AI-powered assistance.
+            </p>
+
+            <div class="hero-actions">
+                <a href="#how-it-works" class="btn btn-primary btn-lg">
+                    Explore the Platform
+                </a>
+                <a href="https://symfony.com" target="_blank"
+                   rel="noopener noreferrer"
+                   class="btn btn-outline-secondary btn-lg">
+                    Discover Symfony
+                </a>
+            </div>
+
+            <div class="hero-tech">
+                BUILT WITH
+                <span>Symfony</span>
+                <span>PHP</span>
+                <span>AI</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="features" id="how-it-works">
+    <div class="container">
+        <div class="section-heading text-center">
+            <span class="section-label">HOW IT WORKS</span>
+            <h2>From legacy to modern, step by step.</h2>
+            <p>Three steps to transform your PHP application.</p>
+        </div>
+
+        <div class="row g-4">
+            {% set features = [
+                {
+                    'number': '01',
+                    'icon': '⌕',
+                    'title': 'Analyze',
+                    'description': 'Explore your PHP codebase, detect dependencies, and identify modernization opportunities.'
+                },
+                {
+                    'number': '02',
+                    'icon': '◇',
+                    'title': 'Plan',
+                    'description': 'Create a structured migration roadmap with intelligent AI recommendations.'
+                },
+                {
+                    'number': '03',
+                    'icon': '↗',
+                    'title': 'Migrate',
+                    'description': 'Generate modern Symfony components from your existing legacy PHP code.'
+                }
+            ] %}
+
+            {% for feature in features %}
+                <div class="col-md-4">
+                    <div class="feature-card h-100">
+                        <div class="feature-top">
+                            <span class="feature-icon">{{ feature.icon }}</span>
+                            <span class="feature-number">{{ feature.number }}</span>
+                        </div>
+                        <h3>{{ feature.title }}</h3>
+                        <p>{{ feature.description }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
