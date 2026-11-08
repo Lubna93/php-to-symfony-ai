@@ -1,0 +1,26 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - database
+
+  database:
+    image: mariadb:11.4
+    ports:
+      - "127.0.0.1:3307:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: php2symfony
+      MARIADB_USER: symfony
+      MARIADB_PASSWORD: symfony
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
