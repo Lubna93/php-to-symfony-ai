@@ -1,0 +1,32 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ project.name }} | PHP2Symfony AI{% endblock %}
+
+{% block body %}
+<section class="py-5">
+    <div class="container">
+        <div class="mb-4">
+            <span class="section-label">MIGRATION WORKSPACE</span>
+            <h1 class="mt-2">{{ project.name }}</h1>
+            <p class="text-secondary">
+                {{ project.sourceFramework }}
+                →
+                {{ project.targetFramework }}
+            </p>
+        </div>
+
+        <div class="feature-card">
+            <h2 class="h5 mb-3">Upload your legacy application</h2>
+            <p class="text-secondary">
+                Upload a ZIP archive containing your PHP source code
+                to begin the migration analysis.
+            </p>
+
+            <button class="btn btn-secondry mt-3" disabled>
+                Upload ZIP — Coming Soon
+            </button>
+        </div>
+    </div>
+</section>
+{% endblock %}

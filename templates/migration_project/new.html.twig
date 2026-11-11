@@ -1,0 +1,49 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}New Migration Project | PHP2Symfony AI{% endblock %}
+
+{% block body %}
+<section class="py-5">
+    <div class="container" style="max-width: 680px;">
+        <div class="mb-4">
+            <span class="section-label">NEW PROJECT</span>
+            <h1 class="mt-2">Start a migration</h1>
+            <p class="text-secondary">
+                Tell us about your legacy application.
+            </p>
+        </div>
+
+        <div class="feature-card">
+            {{ form_start(form) }}
+
+                <div class="mb-3">
+                    {{ form_row(form.name, {
+                        label_attr: { class: 'mb-2' },
+                        attr: { class: 'form-control' }
+                    }) }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form_row(form.sourceFramework, {
+                        label_attr: { class: 'mb-2' },
+                        attr: { class: 'form-select' }
+                    }) }}
+                </div>
+
+                <div class="mb-4">
+                    {{ form_row(form.targetFramework, {
+                        label_attr: { class: 'mb-2' },
+                        attr: { class: 'form-select' }
+                    }) }}
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    Create Project
+                </button>
+
+            {{ form_end(form) }}
+        </div>
+    </div>
+</section>
+{% endblock %}
