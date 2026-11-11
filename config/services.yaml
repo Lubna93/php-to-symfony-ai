@@ -28,3 +28,7 @@ services:
     App\Service\ProjectExtractionService:
         arguments:
             $projectDir: '%kernel.project_dir%'
+
+    App\Service\MigrationPlanGeneratorService:
+        arguments:
+            $migrationAgent: '@ai.traceable_agent.migration'

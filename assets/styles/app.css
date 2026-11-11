@@ -336,6 +336,54 @@ body {
     --bs-table-bg-state: #303440;
 }
 
+
+/* Migration workspace */
+
+.step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: rgba(255, 146, 120, .1);
+    color: var(--accent);
+    font-size: .85rem;
+    font-weight: 600;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, .035);
+    border: 1px solid rgba(255, 255, 255, .08);
+}
+
+.accent-text {
+    color: var(--accent);
+}
+
+.migration-plan-content {
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+.migration-plan-content h1,
+.migration-plan-content h2,
+.migration-plan-content h3 {
+    color: var(--accent);
+    margin: 1.5rem 0 1rem;
+}
+
+.migration-plan-content h1:first-child,
+.migration-plan-content h2:first-child,
+.migration-plan-content h3:first-child {
+    margin-top: 0;
+}
+
+.migration-plan-content pre {
+    overflow-x: auto;
+}
+
 /* Responsive */
 
 @media (min-width: 1200px) {
