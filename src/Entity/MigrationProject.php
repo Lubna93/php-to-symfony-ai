@@ -28,6 +28,9 @@ class MigrationProject
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $archiveFilename = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -97,4 +100,17 @@ class MigrationProject
 
         return $this;
     }
+    
+    public function getArchiveFilename(): ?string
+    {
+        return $this->archiveFilename;
+    }
+
+    public function setArchiveFilename(?string $archiveFilename): static
+    {
+        $this->archiveFilename = $archiveFilename;
+
+        return $this;
+    }
+
 }
