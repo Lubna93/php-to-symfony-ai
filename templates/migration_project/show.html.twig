@@ -65,9 +65,22 @@
                 <div class="feature-card mt-4">
                     <h2 class="h5 mb-3">PHP Analysis</h2>
 
-                    <p class="text-secondary">
-                        Found {{ analysis.totalFiles }} PHP files.
-                    </p>
+                    <div class="d-flex flex-wrap gap-4 mb-4">
+                        <div>
+                            <div class="text-secondary small">PHP Files</div>
+                            <div class="fs-3 fw-bold">{{ analysis.totalFiles }}</div>
+                        </div>
+
+                        <div>
+                            <div class="text-secondary small">Classes / Interfaces / Traits</div>
+                            <div class="fs-3 fw-bold">{{ analysis.totalClasses }}</div>
+                        </div>
+
+                        <div>
+                            <div class="text-secondary small">Functions / Methods</div>
+                            <div class="fs-3 fw-bold">{{ analysis.totalFunctions }}</div>
+                        </div>
+                    </div>
 
                     {% if analysis.totalFiles > 0 %}
                         <div class="table-responsive">
