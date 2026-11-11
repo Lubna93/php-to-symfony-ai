@@ -128,7 +128,6 @@ body {
 
 /* Buttons */
 
-
 .btn-primary {
     --bs-btn-color: var(--bg);
     --bs-btn-bg: var(--accent);
