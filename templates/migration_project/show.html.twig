@@ -10,22 +10,44 @@
             <span class="section-label">MIGRATION WORKSPACE</span>
             <h1 class="mt-2">{{ project.name }}</h1>
             <p class="text-secondary">
-                {{ project.sourceFramework }}
-                →
-                {{ project.targetFramework }}
+                {{ project.sourceFramework }} → {{ project.targetFramework }}
             </p>
         </div>
 
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+
         <div class="feature-card">
             <h2 class="h5 mb-3">Upload your legacy application</h2>
+
             <p class="text-secondary">
                 Upload a ZIP archive containing your PHP source code
                 to begin the migration analysis.
             </p>
 
-            <button class="btn btn-secondry mt-3" disabled>
-                Upload ZIP — Coming Soon
-            </button>
+            {% if project.archiveFilename %}
+                <p class="text-success">
+                    Uploaded: {{ project.archiveFilename }}
+                </p>
+            {% endif %}
+
+            {{ form_start(uploadForm) }}
+                <div class="mb-3">
+                    {{ form_row(uploadForm.archive, {
+                        label_attr: { class: 'mb-2' },
+                        attr: { class: 'form-control' }
+                    }) }}
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-sm px-3 py-2 mt-3">
+                    Upload ZIP
+                </button>
+            {{ form_end(uploadForm) }}
         </div>
     </div>
 </section>
