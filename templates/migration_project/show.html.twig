@@ -48,6 +48,52 @@
                     Upload ZIP
                 </button>
             {{ form_end(uploadForm) }}
+
+            {% if project.archiveFilename %}
+                <div class="mt-4">
+                    <form method="post" action="{{ path('app_project_extract', {id: project.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('extract' ~ project.id) }}">
+
+                        <button type="submit" class="btn btn-outline-info btn-sm px-3 py-2">
+                            Extract Files
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+
+            {% if analysis is not null %}
+                <div class="feature-card mt-4">
+                    <h2 class="h5 mb-3">PHP Analysis</h2>
+
+                    <p class="text-secondary">
+                        Found {{ analysis.totalFiles }} PHP files.
+                    </p>
+
+                    {% if analysis.totalFiles > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-dark table-striped align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>File</th>
+                                        <th>Size</th>
+                                        <th>Lines</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for file in analysis.files %}
+                                        <tr>
+                                            <td>{{ file.path }}</td>
+                                            <td>{{ file.size }} bytes</td>
+                                            <td>{{ file.lines }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
         </div>
     </div>
 </section>

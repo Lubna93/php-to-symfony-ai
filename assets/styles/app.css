@@ -317,6 +317,25 @@ body {
     font-size: 13px;
 }
 
+/* Analysis Table */
+.table-dark {
+    --bs-table-bg: var(--surface);
+    --bs-table-striped-bg: #2C2F3B;
+    --bs-table-color: var(--text);
+    --bs-table-striped-color: var(--text);
+    --bs-table-border-color: var(--border);
+}
+
+.table-dark thead th {
+    color: var(--accent-secondary);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+}
+
+.table-dark tbody tr:hover {
+    --bs-table-bg-state: #303440;
+}
+
 /* Responsive */
 
 @media (min-width: 1200px) {

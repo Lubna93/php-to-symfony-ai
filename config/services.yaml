@@ -24,3 +24,7 @@ services:
     App\Service\ProjectUploadService:
         arguments:
             $projectDir: '%kernel.project_dir%'
+
+    App\Service\ProjectExtractionService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
