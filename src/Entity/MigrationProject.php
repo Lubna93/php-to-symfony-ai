@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Config\StatusType;
 use App\Repository\MigrationProjectRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -23,7 +24,7 @@ class MigrationProject
     private ?string $targetFramework = null;
 
     #[ORM\Column(length: 50)]
-    private ?string $status = 'draft';
+    private StatusType $status = StatusType::DRAFT;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt;
@@ -77,12 +78,12 @@ class MigrationProject
         return $this;
     }
 
-    public function getStatus(): ?string
+    public function getStatus(): StatusType
     {
         return $this->status;
     }
 
-    public function setStatus(string $status): static
+    public function setStatus(StatusType $status): static
     {
         $this->status = $status;
 
@@ -100,7 +101,7 @@ class MigrationProject
 
         return $this;
     }
-    
+
     public function getArchiveFilename(): ?string
     {
         return $this->archiveFilename;

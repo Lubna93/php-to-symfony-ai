@@ -19,7 +19,7 @@
                 </div>
 
                 <span class="badge rounded-pill text-bg-secondary px-3 py-2">
-                    {{ project.status|replace({'_': ' '})|title }}
+                    {{ project.status.value|replace({'_': ' '})|title }}
                 </span>
             </div>
         </div>
