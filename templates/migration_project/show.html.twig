@@ -77,7 +77,7 @@
                     </div>
 
                     <form method="post"
-                          action="{{ path('app_project_extract', {id: project.id}) }}">
+                          action="{{ path('app_project_extract', {uid: project.uid}) }}">
                         <input type="hidden"
                                name="_token"
                                value="{{ csrf_token('extract' ~ project.id) }}">
@@ -169,7 +169,7 @@
                     </div>
 
                     <form method="post"
-                          action="{{ path('app_project_generate_plan', {id: project.id}) }}">
+                          action="{{ path('app_project_generate_plan', {uid: project.uid}) }}">
                         <input type="hidden"
                                name="_token"
                                value="{{ csrf_token('generate-plan' ~ project.id) }}">
