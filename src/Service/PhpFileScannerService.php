@@ -3,11 +3,15 @@
 namespace App\Service;
 
 use Symfony\Component\Finder\Finder;
+use App\Entity\MigrationProject;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class PhpFileScannerService
 {
     public function __construct(
         private readonly PhpStructureAnalyzerService $structureAnalyzer,
+        #[Autowire('%kernel.project_dir%')]
+        private readonly string $projectDir,
     ) {
     }
 
@@ -57,5 +61,16 @@ class PhpFileScannerService
             'totalFunctions' => $totalFunctions,
             'files' => $files,
         ];
+    }
+
+    public function scanProject(MigrationProject $project): array
+    {
+        $directory = sprintf(
+            '%s/var/storage/projects/%d/extracted',
+            $this->projectDir,
+            $project->getId()
+        );
+
+        return $this->scan($directory);
     }
 }

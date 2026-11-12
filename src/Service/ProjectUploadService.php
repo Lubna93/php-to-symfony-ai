@@ -27,7 +27,8 @@ class ProjectUploadService
                 'Only ZIP files are allowed.'
             );
         }
-
+        // TODO: Manage uploaded ZIP files with VichUploaderBundle.
+        // @see https://github.com/dustin10/VichUploaderBundle
         $directory = sprintf(
             '%s/var/storage/projects/%d/original',
             $this->projectDir,

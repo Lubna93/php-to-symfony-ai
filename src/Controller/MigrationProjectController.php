@@ -83,17 +83,9 @@ class MigrationProjectController extends AbstractController
 
         $migrationPlan = $planReader->read($project);
 
-        if ($project->getStatus() === StatusType::EXTRACTED) {
-            // @todo use managed files
-            // @see https://github.com/dustin10/VichUploaderBundle
-            $directory = sprintf(
-                '%s/var/storage/projects/%d/extracted',
-                $this->getParameter('kernel.project_dir'),
-                $project->getId()
-            );
-
-            $analysis = $scanner->scan($directory);
-        }
+        $analysis = $project->getStatus() === StatusType::EXTRACTED
+            ? $scanner->scanProject($project)
+            : null;
 
         $migrationPlanHtml = $migrationPlan
             ? $planReader->renderHtml($migrationPlan)
