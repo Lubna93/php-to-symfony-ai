@@ -78,12 +78,12 @@ class MigrationProject
         return $this;
     }
 
-    public function getStatus(): ?string
+    public function getStatus(): StatusType
     {
         return $this->status;
     }
 
-    public function setStatus(string $status): static
+    public function setStatus(StatusType $status): static
     {
         $this->status = $status;
 

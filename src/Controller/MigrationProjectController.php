@@ -62,7 +62,7 @@ class MigrationProjectController extends AbstractController
                 $filename = $uploadService->upload($file, $project);
 
                 $project->setArchiveFilename($filename);
-                $project->setStatus('uploaded');
+                $project->setStatus(StatusType::UPLOADED);
 
                 $entityManager->flush();
 
@@ -134,7 +134,7 @@ class MigrationProjectController extends AbstractController
         try {
             $extractionService->extract($project);
 
-            $project->setStatus('extracted');
+            $project->setStatus(StatusType::EXTRACTED);
             $entityManager->flush();
 
             $this->addFlash('success', 'ZIP extracted successfully.');
@@ -159,7 +159,7 @@ class MigrationProjectController extends AbstractController
             throw $this->createAccessDeniedException('Invalid CSRF token.');
         }
 
-        if ($project->getStatus() !== 'extracted') {
+        if ($project->getStatus() !== StatusType::EXTRACTED) {
             throw $this->createAccessDeniedException('Project must be extracted first.');
         }
 
