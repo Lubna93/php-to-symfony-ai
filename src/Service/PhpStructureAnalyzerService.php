@@ -87,6 +87,60 @@ class PhpStructureAnalyzerService
             }
         }
 
+        $legacyFunctions = [
+            'mysql_query',
+            'mysql_connect',
+            'mysql_select_db',
+            'mysql_fetch_assoc',
+            'ereg',
+            'eregi',
+            'split',
+            'each',
+            'create_function',
+            'get_magic_quotes_gpc',
+        ];
+
+        $databaseCalls = [];
+        $legacyCalls = [];
+
+        $functionCalls = $finder->findInstanceOf(
+            $nodes,
+            Node\Expr\FuncCall::class
+        );
+
+        foreach ($functionCalls as $call) {
+            if (!$call->name instanceof Node\Name) {
+                continue;
+            }
+
+            $name = strtolower($call->name->toString());
+
+            if (in_array($name, $legacyFunctions, true)) {
+                $legacyCalls[] = $name;
+            }
+
+            if (str_starts_with($name, 'mysql_') || str_starts_with($name, 'mysqli_')) {
+                $databaseCalls[] = $name;
+            }
+        }
+
+        $methodCalls = $finder->find($nodes, static function (Node $node): bool {
+            return $node instanceof Node\Expr\MethodCall
+                || $node instanceof Node\Expr\StaticCall;
+        });
+
+        foreach ($methodCalls as $call) {
+            if (!$call->name instanceof Node\Identifier) {
+                continue;
+            }
+
+            $method = strtolower($call->name->toString());
+
+            if (in_array($method, ['query', 'prepare', 'exec'], true)) {
+                $databaseCalls[] = $method;
+            }
+        }
+
         return [
             'namespace' => isset($namespaces[0])
                 ? $namespaces[0]->name?->toString()
@@ -103,6 +157,8 @@ class PhpStructureAnalyzerService
                 $functions
             ),
             'dependencies' => $dependencies,
+            'databaseCalls' => $databaseCalls,
+            'legacyCalls' => $legacyCalls,
         ];
     }
 }

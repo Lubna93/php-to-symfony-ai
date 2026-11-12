@@ -34,6 +34,8 @@ class PhpFileScannerService
         $files = [];
         $totalClasses = 0;
         $totalFunctions = 0;
+        $totalDatabaseCalls = 0;
+        $totalLegacyCalls = 0;
 
         foreach ($finder as $file) {
             $structure = $this->structureAnalyzer->analyze($file->getRealPath());
@@ -43,6 +45,8 @@ class PhpFileScannerService
 
             $totalClasses += $classCount;
             $totalFunctions += $functionCount;
+            $totalDatabaseCalls += count($structure['databaseCalls']);
+            $totalLegacyCalls += count($structure['legacyCalls']);
 
             $files[] = [
                 'path' => $file->getRelativePathname(),
@@ -52,6 +56,8 @@ class PhpFileScannerService
                 'classes' => $structure['classes'],
                 'functions' => $structure['functions'],
                 'dependencies' => $structure['dependencies'],
+                'databaseCalls' => $structure['databaseCalls'],
+                'legacyCalls' => $structure['legacyCalls'],
             ];
         }
 
@@ -59,6 +65,8 @@ class PhpFileScannerService
             'totalFiles' => count($files),
             'totalClasses' => $totalClasses,
             'totalFunctions' => $totalFunctions,
+            'totalDatabaseCalls' => $totalDatabaseCalls,
+            'totalLegacyCalls' => $totalLegacyCalls,
             'files' => $files,
         ];
     }
