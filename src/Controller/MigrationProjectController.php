@@ -15,8 +15,8 @@ use App\Service\ProjectUploadService;
 use App\Service\ProjectExtractionService;
 use App\Service\PhpFileScannerService;
 use App\Service\MigrationPlanGeneratorService;
-use League\CommonMark\CommonMarkConverter;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
+use App\Service\MigrationPlanReaderService;
 
 class MigrationProjectController extends AbstractController
 {
@@ -52,7 +52,8 @@ class MigrationProjectController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         ProjectUploadService $uploadService,
-        PhpFileScannerService $scanner
+        PhpFileScannerService $scanner,
+        MigrationPlanReaderService $planReader
     ): Response {
         $form = $this->createForm(ProjectUploadType::class);
         $form->handleRequest($request);
@@ -80,15 +81,7 @@ class MigrationProjectController extends AbstractController
 
         $analysis = null;
 
-        $planPath = sprintf(
-            '%s/var/storage/projects/%d/migration-plan.md',
-            $this->getParameter('kernel.project_dir'),
-            $project->getId()
-        );
-
-        $migrationPlan = is_file($planPath)
-            ? file_get_contents($planPath)
-            : null;
+        $migrationPlan = $planReader->read($project);
 
         if ($project->getStatus() === StatusType::EXTRACTED) {
             // @todo use managed files
@@ -102,16 +95,9 @@ class MigrationProjectController extends AbstractController
             $analysis = $scanner->scan($directory);
         }
 
-        $migrationPlanHtml = null;
-
-        if ($migrationPlan) {
-            $converter = new CommonMarkConverter([
-                'html_input' => 'strip',
-                'allow_unsafe_links' => false,
-            ]);
-
-            $migrationPlanHtml = $converter->convert($migrationPlan)->getContent();
-        }
+        $migrationPlanHtml = $migrationPlan
+            ? $planReader->renderHtml($migrationPlan)
+            : null;
 
         return $this->render('migration_project/show.html.twig', [
             'project' => $project,
