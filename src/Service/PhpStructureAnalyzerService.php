@@ -38,6 +38,55 @@ class PhpStructureAnalyzerService
                 || $node instanceof Node\Stmt\ClassMethod;
         });
 
+
+        $uses = $finder->findInstanceOf(
+            $nodes,
+            Node\Stmt\Use_::class
+        );
+
+        $includes = $finder->find($nodes, static function (Node $node): bool {
+            return $node instanceof Node\Expr\Include_;
+        });
+
+        $dependencies = [
+            'uses' => [],
+            'includes' => [],
+            'extends' => [],
+            'implements' => [],
+        ];
+
+        foreach ($uses as $use) {
+            foreach ($use->uses as $item) {
+                $dependencies['uses'][] = $item->name->toString();
+            }
+        }
+
+        foreach ($includes as $include) {
+            $dependencies['includes'][] = [
+                'type' => match ($include->type) {
+                    Node\Expr\Include_::TYPE_REQUIRE => 'require',
+                    Node\Expr\Include_::TYPE_REQUIRE_ONCE => 'require_once',
+                    Node\Expr\Include_::TYPE_INCLUDE => 'include',
+                    Node\Expr\Include_::TYPE_INCLUDE_ONCE => 'include_once',
+                },
+                'path' => $include->expr instanceof Node\Scalar\String_
+                    ? $include->expr->value
+                    : '[dynamic]',
+            ];
+        }
+
+        foreach ($classes as $class) {
+            if ($class instanceof Node\Stmt\Class_ && $class->extends) {
+                $dependencies['extends'][] = $class->extends->toString();
+            }
+
+            if ($class instanceof Node\Stmt\Class_ || $class instanceof Node\Stmt\Interface_) {
+                foreach ($class->implements ?? [] as $interface) {
+                    $dependencies['implements'][] = $interface->toString();
+                }
+            }
+        }
+
         return [
             'namespace' => isset($namespaces[0])
                 ? $namespaces[0]->name?->toString()
@@ -53,6 +102,7 @@ class PhpStructureAnalyzerService
                 static fn (Node $node): string => $node->name->toString(),
                 $functions
             ),
+            'dependencies' => $dependencies,
         ];
     }
 }

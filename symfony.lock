@@ -50,6 +50,27 @@
             "bin/phpunit"
         ]
     },
+    "symfony/ai-bundle": {
+        "version": "0.15",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "0.1",
+            "ref": "abb8f2c86de009cbc24a3408a3ca7aedc6aaa7c8"
+        },
+        "files": [
+            "./config/packages/ai.yaml"
+        ]
+    },
+    "symfony/ai-open-ai-platform": {
+        "version": "0.15",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "0.1",
+            "ref": "1815c0412f5ef5da5f924ea5fe84ebd6a5422476"
+        }
+    },
     "symfony/asset-mapper": {
         "version": "7.4",
         "recipe": {
@@ -269,6 +290,15 @@
             "config/packages/twig.yaml",
             "templates/base.html.twig"
         ]
+    },
+    "symfony/uid": {
+        "version": "7.4",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "7.0",
+            "ref": "0df5844274d871b37fc3816c57a768ffc60a43a5"
+        }
     },
     "symfony/ux-turbo": {
         "version": "3.7",

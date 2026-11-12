@@ -47,6 +47,7 @@ class PhpFileScannerService
                 'namespace' => $structure['namespace'],
                 'classes' => $structure['classes'],
                 'functions' => $structure['functions'],
+                'dependencies' => $structure['dependencies'],
             ];
         }
 
