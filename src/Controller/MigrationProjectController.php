@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Config\StatusType;
 use App\Entity\MigrationProject;
 use App\Form\MigrationProjectType;
 use Doctrine\ORM\EntityManagerInterface;
@@ -87,7 +88,9 @@ class MigrationProjectController extends AbstractController
             ? file_get_contents($planPath)
             : null;
 
-        if ($project->getStatus() === 'extracted') {
+        if ($project->getStatus() === StatusType::EXTRACTED) {
+            // @todo use managed files
+            // @see https://github.com/dustin10/VichUploaderBundle
             $directory = sprintf(
                 '%s/var/storage/projects/%d/extracted',
                 $this->getParameter('kernel.project_dir'),
