@@ -36,6 +36,7 @@ class PhpFileScannerService
         $totalFunctions = 0;
         $totalDatabaseCalls = 0;
         $totalLegacyCalls = 0;
+        $totalSqlOperations = 0;
 
         foreach ($finder as $file) {
             $structure = $this->structureAnalyzer->analyze($file->getRealPath());
@@ -47,6 +48,21 @@ class PhpFileScannerService
             $totalFunctions += $functionCount;
             $totalDatabaseCalls += count($structure['databaseCalls']);
             $totalLegacyCalls += count($structure['legacyCalls']);
+            $totalSqlOperations += count($structure['sqlOperations']);
+
+            $databaseCallCount = count($structure['databaseCalls']);
+            $legacyCallCount = count($structure['legacyCalls']);
+            $sqlOperationCount = count($structure['sqlOperations']);
+
+            $priorityScore = ($legacyCallCount * 5)
+                + ($databaseCallCount * 2)
+                + $sqlOperationCount;
+
+            $priority = match (true) {
+                $priorityScore >= 10 => 'High',
+                $priorityScore >= 4 => 'Medium',
+                default => 'Low',
+            };
 
             $files[] = [
                 'path' => $file->getRelativePathname(),
@@ -58,6 +74,9 @@ class PhpFileScannerService
                 'dependencies' => $structure['dependencies'],
                 'databaseCalls' => $structure['databaseCalls'],
                 'legacyCalls' => $structure['legacyCalls'],
+                'sqlOperations' => $structure['sqlOperations'],
+                'priority' => $priority,
+                'priorityScore' => $priorityScore,
             ];
         }
 
@@ -68,6 +87,7 @@ class PhpFileScannerService
             'totalDatabaseCalls' => $totalDatabaseCalls,
             'totalLegacyCalls' => $totalLegacyCalls,
             'files' => $files,
+            'totalSqlOperations' => $totalSqlOperations,
         ];
     }
 

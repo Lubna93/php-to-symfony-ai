@@ -151,6 +151,17 @@
                         </div>
                     </div>
 
+                    <div class="col-md-4">
+                        <div class="stat-card rounded p-3 h-100">
+                            <div class="text-secondary small mb-2">
+                                SQL Operations
+                            </div>
+                            <div class="fs-2 fw-bold">
+                                {{ analysis.totalSqlOperations }}
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
                 {% if analysis.totalFiles > 0 %}
@@ -191,15 +202,28 @@
                     </div>
 
                     <form method="post"
-                          action="{{ path('app_project_generate_plan', {uid: project.uid}) }}">
+                        action="{{ path('app_project_generate_plan', {uid: project.uid}) }}"
+                        data-loading-form>
                         <input type="hidden"
-                               name="_token"
-                               value="{{ csrf_token('generate-plan' ~ project.id) }}">
+                            name="_token"
+                            value="{{ csrf_token('generate-plan' ~ project.id) }}">
 
-                        <button type="submit" class="btn btn-primary btn-sm px-3 py-2">
-                            {{ migrationPlan ? 'Regenerate Plan' : 'Generate Plan' }}
+                        <button type="submit"
+                                class="btn btn-primary btn-sm px-3 py-2"
+                                data-loading-button>
+
+                            <span data-button-label>
+                                {{ migrationPlan ? 'Regenerate Plan' : 'Generate Plan' }}
+                            </span>
+
+                            <span class="d-none" data-loading-label>
+                                <span class="spinner-border spinner-border-sm me-2"
+                                    aria-hidden="true"></span>
+                                Generating plan...
+                            </span>
                         </button>
                     </form>
+
                 </div>
 
                 {% if migrationPlan %}
@@ -255,6 +279,7 @@
                                     <th>Lines</th>
                                     <th>DB Calls</th>
                                     <th>Legacy Calls</th>
+                                    <th>Review Priority</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -275,6 +300,15 @@
                                                 0
                                             {% endif %}
                                         </td>
+                                        <td>
+                                            <span class="badge text-bg-{{
+                                                file.priority == 'High' ? 'danger' :
+                                                (file.priority == 'Medium' ? 'warning' : 'secondary')
+                                            }}">
+                                                {{ file.priority }}
+                                            </span>
+                                        </td>
+
                                     </tr>
                                 {% endfor %}
                             </tbody>

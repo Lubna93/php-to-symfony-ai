@@ -141,6 +141,24 @@ class PhpStructureAnalyzerService
             }
         }
 
+
+        $sqlOperations = [];
+
+        $strings = $finder->findInstanceOf(
+            $nodes,
+            Node\Scalar\String_::class
+        );
+
+        foreach ($strings as $string) {
+            if (preg_match(
+                '/^\s*(SELECT|INSERT|UPDATE|DELETE)\b/i',
+                $string->value,
+                $matches
+            )) {
+                $sqlOperations[] = strtoupper($matches[1]);
+            }
+        }
+
         return [
             'namespace' => isset($namespaces[0])
                 ? $namespaces[0]->name?->toString()
@@ -159,6 +177,7 @@ class PhpStructureAnalyzerService
             'dependencies' => $dependencies,
             'databaseCalls' => $databaseCalls,
             'legacyCalls' => $legacyCalls,
+            'sqlOperations' => $sqlOperations,
         ];
     }
 }

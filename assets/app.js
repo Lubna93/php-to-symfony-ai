@@ -7,3 +7,4 @@ import 'bootstrap';
 
 // Custom application styles
 import './styles/app.css';
+import './js/common.js';
