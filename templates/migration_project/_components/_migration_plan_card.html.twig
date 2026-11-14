@@ -1,0 +1,58 @@
+<div class="feature-card mb-4">
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <span class="step-number">03</span>
+        <div>
+            <h2 class="h5 mb-1">AI Migration Plan</h2>
+            <p class="text-secondary small mb-0">
+                Generate a Symfony migration strategy based on the PHP analysis.
+            </p>
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap align-items-center gap-3 p-3 rounded border">
+        <span class="fs-3 accent-text">✦</span>
+
+        <div class="flex-grow-1">
+            <div class="fw-semibold">Symfony Migration Architect</div>
+            <div class="text-secondary small">
+                AI-powered migration recommendations.
+            </div>
+        </div>
+
+        <form method="post"
+              action="{{ path('app_project_generate_plan', {uid: project.uid}) }}"
+              data-loading-form>
+            <input type="hidden"
+                   name="_token"
+                   value="{{ csrf_token('generate-plan' ~ project.id) }}">
+
+            <button type="submit"
+                    class="btn btn-primary btn-sm px-3 py-2"
+                    data-loading-button>
+
+                <span data-button-label>
+                    {{ migrationPlan ? 'Regenerate Plan' : 'Generate Plan' }}
+                </span>
+
+                <span class="d-none" data-loading-label>
+                    <span class="spinner-border spinner-border-sm me-2"
+                          aria-hidden="true"></span>
+                    Generating plan...
+                </span>
+            </button>
+        </form>
+    </div>
+
+    {% if migrationPlan %}
+        <div class="border rounded mt-4">
+            <div class="d-flex justify-content-between align-items-center gap-2 p-3 border-bottom">
+                <h3 class="h6 mb-0">Generated Migration Plan</h3>
+                <span class="badge text-bg-secondary">AI Generated</span>
+            </div>
+
+            <div class="migration-plan-content p-4">
+                {{ migrationPlanHtml|raw }}
+            </div>
+        </div>
+    {% endif %}
+</div>
