@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Config\StatusType;
 use App\Entity\MigrationProject;
 use App\Form\MigrationProjectType;
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,7 +15,8 @@ use App\Service\ProjectUploadService;
 use App\Service\ProjectExtractionService;
 use App\Service\PhpFileScannerService;
 use App\Service\MigrationPlanGeneratorService;
-use League\CommonMark\CommonMarkConverter;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
+use App\Service\MigrationPlanReaderService;
 
 class MigrationProjectController extends AbstractController
 {
@@ -33,7 +35,7 @@ class MigrationProjectController extends AbstractController
             $entityManager->flush();
 
             return $this->redirectToRoute('app_project_show', [
-                'id' => $project->getId(),
+                'uid' => $project->getUid()->toRfc4122(),
             ]);
         }
 
@@ -43,13 +45,15 @@ class MigrationProjectController extends AbstractController
     }
 
 
-    #[Route('/projects/{id}', name: 'app_project_show', requirements: ['id' => '\d+'])]
+    #[Route('/projects/{uid}', name: 'app_project_show')]
     public function show(
+        #[MapEntity(mapping: ['uid' => 'uid'])]
         MigrationProject $project,
         Request $request,
         EntityManagerInterface $entityManager,
         ProjectUploadService $uploadService,
-        PhpFileScannerService $scanner
+        PhpFileScannerService $scanner,
+        MigrationPlanReaderService $planReader
     ): Response {
         $form = $this->createForm(ProjectUploadType::class);
         $form->handleRequest($request);
@@ -61,14 +65,14 @@ class MigrationProjectController extends AbstractController
                 $filename = $uploadService->upload($file, $project);
 
                 $project->setArchiveFilename($filename);
-                $project->setStatus('uploaded');
+                $project->setStatus(StatusType::UPLOADED);
 
                 $entityManager->flush();
 
                 $this->addFlash('success', 'ZIP file uploaded successfully.');
 
                 return $this->redirectToRoute('app_project_show', [
-                    'id' => $project->getId(),
+                    'uid' => $project->getUid()->toRfc4122(),
                 ]);
             } catch (\InvalidArgumentException $e) {
                 $this->addFlash('danger', $e->getMessage());
@@ -77,36 +81,15 @@ class MigrationProjectController extends AbstractController
 
         $analysis = null;
 
-        $planPath = sprintf(
-            '%s/var/storage/projects/%d/migration-plan.md',
-            $this->getParameter('kernel.project_dir'),
-            $project->getId()
-        );
+        $migrationPlan = $planReader->read($project);
 
-        $migrationPlan = is_file($planPath)
-            ? file_get_contents($planPath)
+        $analysis = $project->getStatus() === StatusType::EXTRACTED
+            ? $scanner->scanProject($project)
             : null;
 
-        if ($project->getStatus() === 'extracted') {
-            $directory = sprintf(
-                '%s/var/storage/projects/%d/extracted',
-                $this->getParameter('kernel.project_dir'),
-                $project->getId()
-            );
-
-            $analysis = $scanner->scan($directory);
-        }
-
-        $migrationPlanHtml = null;
-
-        if ($migrationPlan) {
-            $converter = new CommonMarkConverter([
-                'html_input' => 'strip',
-                'allow_unsafe_links' => false,
-            ]);
-
-            $migrationPlanHtml = $converter->convert($migrationPlan)->getContent();
-        }
+        $migrationPlanHtml = $migrationPlan
+            ? $planReader->renderHtml($migrationPlan)
+            : null;
 
         return $this->render('migration_project/show.html.twig', [
             'project' => $project,
@@ -117,8 +100,9 @@ class MigrationProjectController extends AbstractController
         ]);
     }
 
-    #[Route('/projects/{id}/extract', name: 'app_project_extract', methods: ['POST'])]
+    #[Route('/projects/{uid}/extract', name: 'app_project_extract', methods: ['POST'])]
     public function extract(
+        #[MapEntity(mapping: ['uid' => 'uid'])]
         MigrationProject $project,
         Request $request,
         ProjectExtractionService $extractionService,
@@ -131,7 +115,7 @@ class MigrationProjectController extends AbstractController
         try {
             $extractionService->extract($project);
 
-            $project->setStatus('extracted');
+            $project->setStatus(StatusType::EXTRACTED);
             $entityManager->flush();
 
             $this->addFlash('success', 'ZIP extracted successfully.');
@@ -140,13 +124,14 @@ class MigrationProjectController extends AbstractController
         }
 
         return $this->redirectToRoute('app_project_show', [
-            'id' => $project->getId(),
+            'uid' => $project->getUid()->toRfc4122(),
         ]);
     }
 
 
-    #[Route('/projects/{id}/generate-plan', name: 'app_project_generate_plan', methods: ['POST'])]
+    #[Route('/projects/{uid}/generate-plan', name: 'app_project_generate_plan', methods: ['POST'])]
     public function generatePlan(
+        #[MapEntity(mapping: ['uid' => 'uid'])]
         MigrationProject $project,
         Request $request,
         PhpFileScannerService $scanner,
@@ -156,7 +141,7 @@ class MigrationProjectController extends AbstractController
             throw $this->createAccessDeniedException('Invalid CSRF token.');
         }
 
-        if ($project->getStatus() !== 'extracted') {
+        if ($project->getStatus() !== StatusType::EXTRACTED) {
             throw $this->createAccessDeniedException('Project must be extracted first.');
         }
 
@@ -172,7 +157,7 @@ class MigrationProjectController extends AbstractController
             $this->addFlash('danger', 'No PHP files found to analyze.');
 
             return $this->redirectToRoute('app_project_show', [
-                'id' => $project->getId(),
+                'uid' => $project->getUid()->toRfc4122(),
             ]);
         }
 
@@ -195,7 +180,7 @@ class MigrationProjectController extends AbstractController
         }
 
         return $this->redirectToRoute('app_project_show', [
-            'id' => $project->getId(),
+            'uid' => $project->getUid()->toRfc4122(),
         ]);
     }
 

@@ -3,11 +3,15 @@
 namespace App\Service;
 
 use Symfony\Component\Finder\Finder;
+use App\Entity\MigrationProject;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class PhpFileScannerService
 {
     public function __construct(
         private readonly PhpStructureAnalyzerService $structureAnalyzer,
+        #[Autowire('%kernel.project_dir%')]
+        private readonly string $projectDir,
     ) {
     }
 
@@ -30,6 +34,9 @@ class PhpFileScannerService
         $files = [];
         $totalClasses = 0;
         $totalFunctions = 0;
+        $totalDatabaseCalls = 0;
+        $totalLegacyCalls = 0;
+        $totalSqlOperations = 0;
 
         foreach ($finder as $file) {
             $structure = $this->structureAnalyzer->analyze($file->getRealPath());
@@ -39,6 +46,29 @@ class PhpFileScannerService
 
             $totalClasses += $classCount;
             $totalFunctions += $functionCount;
+            $totalDatabaseCalls += count($structure['databaseCalls']);
+            $totalLegacyCalls += count($structure['legacyCalls']);
+            $totalSqlOperations += count($structure['sqlOperations']);
+
+            $databaseCallCount = count($structure['databaseCalls']);
+            $legacyCallCount = count($structure['legacyCalls']);
+            $sqlOperationCount = count($structure['sqlOperations']);
+
+            $priorityScore = ($legacyCallCount * 5)
+                + ($databaseCallCount * 2)
+                + $sqlOperationCount;
+
+            $priority = match (true) {
+                $priorityScore >= 10 => 'High',
+                $priorityScore >= 4 => 'Medium',
+                default => 'Low',
+            };
+
+            $resolvedDependencies = $this->resolveDependencies(
+                $structure['dependencies'],
+                $file->getRealPath(),
+                $directory
+            );
 
             $files[] = [
                 'path' => $file->getRelativePathname(),
@@ -48,6 +78,12 @@ class PhpFileScannerService
                 'classes' => $structure['classes'],
                 'functions' => $structure['functions'],
                 'dependencies' => $structure['dependencies'],
+                'resolvedDependencies' => $resolvedDependencies,
+                'databaseCalls' => $structure['databaseCalls'],
+                'legacyCalls' => $structure['legacyCalls'],
+                'sqlOperations' => $structure['sqlOperations'],
+                'priority' => $priority,
+                'priorityScore' => $priorityScore,
             ];
         }
 
@@ -55,7 +91,64 @@ class PhpFileScannerService
             'totalFiles' => count($files),
             'totalClasses' => $totalClasses,
             'totalFunctions' => $totalFunctions,
+            'totalDatabaseCalls' => $totalDatabaseCalls,
+            'totalLegacyCalls' => $totalLegacyCalls,
             'files' => $files,
+            'totalSqlOperations' => $totalSqlOperations,
         ];
+    }
+
+    private function resolveDependencies(array $dependencies, string $filePath, string $rootDirectory): array
+    {
+        $resolved = [];
+
+        $rootPath = realpath($rootDirectory);
+
+        foreach ($dependencies['includes'] as $include) {
+            $path = $include['path'];
+
+            if ($include['dynamic'] ?? false) {
+                continue;
+            }
+
+            $candidate = str_starts_with($path, '/')
+                || preg_match('/^[A-Za-z]:[\/\\\\]/', $path)
+                    ? $path
+                    : dirname($filePath) . DIRECTORY_SEPARATOR . $path;
+
+            $absolutePath = realpath($candidate);
+
+            if ($absolutePath === false || $rootPath === false) {
+                continue;
+            }
+
+            $relativePath = substr($absolutePath, strlen($rootPath) + 1);
+
+            if (!str_starts_with($absolutePath, $rootPath . DIRECTORY_SEPARATOR)) {
+                continue;
+            }
+
+            if (!is_file($absolutePath)) {
+                continue;
+            }
+
+            $resolved[] = [
+                'type' => $include['type'],
+                'path' => str_replace('\\', '/', $relativePath),
+            ];
+        }
+
+        return $resolved;
+    }
+
+    public function scanProject(MigrationProject $project): array
+    {
+        $directory = sprintf(
+            '%s/var/storage/projects/%d/extracted',
+            $this->projectDir,
+            $project->getId()
+        );
+
+        return $this->scan($directory);
     }
 }

@@ -2,8 +2,10 @@
 
 namespace App\Entity;
 
+use App\Config\StatusType;
 use App\Repository\MigrationProjectRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: MigrationProjectRepository::class)]
 class MigrationProject
@@ -12,6 +14,9 @@ class MigrationProject
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
+
+    #[ORM\Column(type: 'uuid', unique: true)]
+    private Uuid $uid;
 
     #[ORM\Column(length: 255)]
     private ?string $name = null;
@@ -22,8 +27,8 @@ class MigrationProject
     #[ORM\Column(length: 150)]
     private ?string $targetFramework = null;
 
-    #[ORM\Column(length: 50)]
-    private ?string $status = 'draft';
+    #[ORM\Column(length: 50, enumType: StatusType::class)]
+    private StatusType $status = StatusType::DRAFT;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt;
@@ -34,11 +39,17 @@ class MigrationProject
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
+        $this->uid = Uuid::v7();
     }
 
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getUid(): Uuid
+    {
+        return $this->uid;
     }
 
     public function getName(): ?string
@@ -77,12 +88,12 @@ class MigrationProject
         return $this;
     }
 
-    public function getStatus(): ?string
+    public function getStatus(): StatusType
     {
         return $this->status;
     }
 
-    public function setStatus(string $status): static
+    public function setStatus(StatusType $status): static
     {
         $this->status = $status;
 
@@ -100,7 +111,7 @@ class MigrationProject
 
         return $this;
     }
-    
+
     public function getArchiveFilename(): ?string
     {
         return $this->archiveFilename;

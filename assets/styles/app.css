@@ -181,6 +181,12 @@ body {
     outline-offset: 3px;
 }
 
+.btn-primary:disabled,
+.btn-primary.disabled {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    opacity: 0.7;
+}
 /* Technologies */
 
 .hero-tech {

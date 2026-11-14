@@ -1,0 +1,92 @@
+<div class="feature-card mb-4">
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <span class="step-number">02</span>
+        <div>
+            <h2 class="h5 mb-1">PHP Code Analysis</h2>
+            <p class="text-secondary small mb-0">
+                Structural overview of your legacy application.
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="stat-card rounded p-3 h-100">
+                <div class="text-secondary small mb-2">PHP Files</div>
+                <div class="fs-2 fw-bold">{{ analysis.totalFiles }}</div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card rounded p-3 h-100">
+                <div class="text-secondary small mb-2">
+                    Classes / Interfaces / Traits
+                </div>
+                <div class="fs-2 fw-bold">{{ analysis.totalClasses }}</div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card rounded p-3 h-100">
+                <div class="text-secondary small mb-2">
+                    Functions / Methods
+                </div>
+                <div class="fs-2 fw-bold">{{ analysis.totalFunctions }}</div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card rounded p-3 h-100">
+                <div class="text-secondary small mb-2">
+                    Potential Database Calls
+                </div>
+                <div class="fs-2 fw-bold">
+                    {{ analysis.totalDatabaseCalls }}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card rounded p-3 h-100">
+                <div class="text-secondary small mb-2">
+                    Legacy Function Calls
+                </div>
+                <div class="fs-2 fw-bold">
+                    {{ analysis.totalLegacyCalls }}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card rounded p-3 h-100">
+                <div class="text-secondary small mb-2">
+                    SQL Operations
+                </div>
+                <div class="fs-2 fw-bold">
+                    {{ analysis.totalSqlOperations }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if analysis.totalFiles > 0 %}
+        <div class="d-flex flex-wrap justify-content-end gap-2 mt-4">
+            <button type="button"
+                    class="btn btn-outline-info btn-sm px-3 py-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#dependenciesModal">
+                View Dependencies
+            </button>
+
+            <button type="button"
+                    class="btn btn-outline-info btn-sm px-3 py-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#phpFilesModal">
+                View PHP Files
+                <span class="badge text-bg-secondary ms-2">
+                    {{ analysis.totalFiles }}
+                </span>
+            </button>
+        </div>
+    {% endif %}
+</div>
