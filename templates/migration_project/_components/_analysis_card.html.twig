@@ -70,7 +70,14 @@
     </div>
 
     {% if analysis.totalFiles > 0 %}
-        <div class="text-end mt-4">
+        <div class="d-flex flex-wrap justify-content-end gap-2 mt-4">
+            <button type="button"
+                    class="btn btn-outline-info btn-sm px-3 py-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#dependenciesModal">
+                View Dependencies
+            </button>
+
             <button type="button"
                     class="btn btn-outline-info btn-sm px-3 py-2"
                     data-bs-toggle="modal"

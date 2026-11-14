@@ -64,6 +64,12 @@ class PhpFileScannerService
                 default => 'Low',
             };
 
+            $resolvedDependencies = $this->resolveDependencies(
+                $structure['dependencies'],
+                $file->getRealPath(),
+                $directory
+            );
+
             $files[] = [
                 'path' => $file->getRelativePathname(),
                 'size' => $file->getSize(),
@@ -72,6 +78,7 @@ class PhpFileScannerService
                 'classes' => $structure['classes'],
                 'functions' => $structure['functions'],
                 'dependencies' => $structure['dependencies'],
+                'resolvedDependencies' => $resolvedDependencies,
                 'databaseCalls' => $structure['databaseCalls'],
                 'legacyCalls' => $structure['legacyCalls'],
                 'sqlOperations' => $structure['sqlOperations'],
@@ -89,6 +96,49 @@ class PhpFileScannerService
             'files' => $files,
             'totalSqlOperations' => $totalSqlOperations,
         ];
+    }
+
+    private function resolveDependencies(array $dependencies, string $filePath, string $rootDirectory): array
+    {
+        $resolved = [];
+
+        $rootPath = realpath($rootDirectory);
+
+        foreach ($dependencies['includes'] as $include) {
+            $path = $include['path'];
+
+            if ($include['dynamic'] ?? false) {
+                continue;
+            }
+
+            $candidate = str_starts_with($path, '/')
+                || preg_match('/^[A-Za-z]:[\/\\\\]/', $path)
+                    ? $path
+                    : dirname($filePath) . DIRECTORY_SEPARATOR . $path;
+
+            $absolutePath = realpath($candidate);
+
+            if ($absolutePath === false || $rootPath === false) {
+                continue;
+            }
+
+            $relativePath = substr($absolutePath, strlen($rootPath) + 1);
+
+            if (!str_starts_with($absolutePath, $rootPath . DIRECTORY_SEPARATOR)) {
+                continue;
+            }
+
+            if (!is_file($absolutePath)) {
+                continue;
+            }
+
+            $resolved[] = [
+                'type' => $include['type'],
+                'path' => str_replace('\\', '/', $relativePath),
+            ];
+        }
+
+        return $resolved;
     }
 
     public function scanProject(MigrationProject $project): array

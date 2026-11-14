@@ -5,6 +5,7 @@ namespace App\Service;
 use PhpParser\Node;
 use PhpParser\NodeFinder;
 use PhpParser\ParserFactory;
+use PhpParser\Node\Expr\BinaryOp\Concat;
 
 class PhpStructureAnalyzerService
 {
@@ -62,6 +63,8 @@ class PhpStructureAnalyzerService
         }
 
         foreach ($includes as $include) {
+            $path = $this->resolveIncludePath($include->expr, $filePath);
+
             $dependencies['includes'][] = [
                 'type' => match ($include->type) {
                     Node\Expr\Include_::TYPE_REQUIRE => 'require',
@@ -69,9 +72,8 @@ class PhpStructureAnalyzerService
                     Node\Expr\Include_::TYPE_INCLUDE => 'include',
                     Node\Expr\Include_::TYPE_INCLUDE_ONCE => 'include_once',
                 },
-                'path' => $include->expr instanceof Node\Scalar\String_
-                    ? $include->expr->value
-                    : '[dynamic]',
+                'path' => $path ?? '[dynamic]',
+                'dynamic' => $path === null,
             ];
         }
 
@@ -179,5 +181,27 @@ class PhpStructureAnalyzerService
             'legacyCalls' => $legacyCalls,
             'sqlOperations' => $sqlOperations,
         ];
+    }
+
+    private function resolveIncludePath(Node\Expr $expr, string $filePath): ?string
+    {
+        $path = null;
+
+        if ($expr instanceof Node\Scalar\String_) {
+            $path = $expr->value;
+        } elseif ($expr instanceof Node\Scalar\MagicConst\Dir) {
+            $path = dirname($filePath);
+        } elseif ($expr instanceof Node\Scalar\MagicConst\File) {
+            $path = $filePath;
+        } elseif ($expr instanceof Concat) {
+            $left = $this->resolveIncludePath($expr->left, $filePath);
+            $right = $this->resolveIncludePath($expr->right, $filePath);
+
+            if ($left !== null && $right !== null) {
+                $path = $left . $right;
+            }
+        }
+
+        return $path;
     }
 }

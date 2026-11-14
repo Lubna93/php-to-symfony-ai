@@ -1,0 +1,73 @@
+<div class="modal fade"
+     id="dependenciesModal"
+     tabindex="-1"
+     aria-labelledby="dependenciesModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content bg-dark text-light border-secondary">
+
+            <div class="modal-header border-secondary">
+                <div>
+                    <span class="section-label">CODE STRUCTURE</span>
+                    <h2 class="modal-title fs-5 mt-1" id="dependenciesModalLabel">
+                        File Dependencies
+                    </h2>
+                </div>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                {% set hasDependencies = false %}
+
+                {% for file in analysis.files %}
+                    {% if file.resolvedDependencies|length > 0 %}
+                        {% set hasDependencies = true %}
+
+                        <div class="mb-4">
+                            <div class="fw-semibold font-monospace mb-2">
+                                <i class="bi bi-file-earmark-code me-2"></i>
+                                {{ file.path }}
+                            </div>
+
+                            <div class="ms-4 border-start ps-3">
+                                {% for dependency in file.resolvedDependencies %}
+                                    <div class="d-flex flex-wrap align-items-center gap-2 py-1">
+                                        <span class="text-secondary">↳</span>
+
+                                        <span class="font-monospace small">
+                                            {{ dependency.path }}
+                                        </span>
+
+                                        <span class="badge text-bg-secondary">
+                                            {{ dependency.type }}
+                                        </span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                {% if not hasDependencies %}
+                    <p class="text-secondary mb-0">
+                        No resolved file dependencies were detected.
+                    </p>
+                {% endif %}
+            </div>
+
+            <div class="modal-footer border-secondary">
+                <button type="button"
+                        class="btn btn-outline-light btn-sm"
+                        data-bs-dismiss="modal">
+                    Close
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
