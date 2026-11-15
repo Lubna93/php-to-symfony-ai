@@ -16,12 +16,12 @@ class ProjectUploadService
         UploadedFile $file,
         MigrationProject $project
     ): string {
-        if ($file->getSize() > 20 * 1024 * 1024) {
+        if ($file->getSize() > 100 * 1024 * 1024) {
             throw new \InvalidArgumentException(
-                'The ZIP file must not exceed 20 MB.'
+                'The ZIP file must not exceed 100 MB.'
             );
         }
-
+        
         if ($file->getMimeType() !== 'application/zip') {
             throw new \InvalidArgumentException(
                 'Only ZIP files are allowed.'
