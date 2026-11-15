@@ -169,6 +169,7 @@ class PhpStructureAnalyzerService
         }
 
         return [
+            'fileType' => $this->detectFileType($nodes),
             'namespace' => isset($namespaces[0])
                 ? $namespaces[0]->name?->toString()
                 : null,
@@ -322,4 +323,50 @@ class PhpStructureAnalyzerService
         }
         return null;
     }
+
+
+    private function detectFileType(array $nodes): string
+    {
+        $finder = new NodeFinder();
+
+        $classes = $finder->findInstanceOf($nodes, Node\Stmt\Class_::class);
+
+        foreach ($classes as $class) {
+            $name = $class->name?->toString() ?? '';
+            $parent = $class->extends?->toString() ?? '';
+
+            if (
+                str_ends_with($name, 'Controller')
+                || str_ends_with($parent, 'Controller')
+            ) {
+                return 'controller';
+            }
+        }
+
+        $hasHtml = $finder->findFirstInstanceOf(
+            $nodes,
+            Node\Stmt\InlineHTML::class
+        ) !== null;
+
+        $hasExecutablePhp = $finder->findFirst(
+            $nodes,
+            static fn (Node $node): bool =>
+                $node instanceof Node\Stmt\Class_
+                || $node instanceof Node\Stmt\Function_
+                || $node instanceof Node\Expr\FuncCall
+                || $node instanceof Node\Expr\MethodCall
+                || $node instanceof Node\Expr\Assign
+        ) !== null;
+
+        if ($hasHtml && !$hasExecutablePhp) {
+            return 'template';
+        }
+
+        if ($hasHtml) {
+            return 'mixed';
+        }
+
+        return 'php';
+    }
+
 }

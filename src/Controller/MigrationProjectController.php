@@ -179,7 +179,7 @@ class MigrationProjectController extends AbstractController
             $this->getParameter('kernel.project_dir'),
             $project->getId()
         );
-
+            
         $analysis = $scanner->scan($projectDirectory . '/extracted');
 
         if ($analysis['totalFiles'] === 0) {
@@ -191,7 +191,11 @@ class MigrationProjectController extends AbstractController
         }
 
         try {
-            $plan = $planGenerator->generate($analysis);
+            $plan = $planGenerator->generate(
+                $analysis,
+                $project->getSourceFramework(),
+                $project->getTargetFramework()
+            );
 
             if (!is_string($plan) || trim($plan) === '') {
                 throw new \RuntimeException('The AI returned an empty migration plan.');
@@ -233,7 +237,9 @@ class MigrationProjectController extends AbstractController
                 $selectedFile['sourceCode'],
                 $selectedFile['path'],
                 $selectedFile['analysis'],
-                $selectedFile['dependencyContext']
+                $selectedFile['dependencyContext'],
+                $project->getSourceFramework(),
+                $project->getTargetFramework()
             );
 
             if (trim($result) === '') {

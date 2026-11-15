@@ -82,6 +82,7 @@ class PhpFileScannerService
 
             $files[] = [
                 'path' => $file->getRelativePathname(),
+                'fileType' => $structure['fileType'],
                 'size' => $file->getSize(),
                 'lines' => count(file($file->getRealPath())),
                 'namespace' => $structure['namespace'],
