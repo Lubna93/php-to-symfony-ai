@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Service;
+namespace App\Service\Migration;
 
 use Symfony\AI\Agent\AgentInterface;
 use Symfony\AI\Platform\Message\Message;
 use Symfony\AI\Platform\Message\MessageBag;
+use App\Service\Security\SensitiveDataFilterService;
 
 final class PhpCodeMigrationService
 {

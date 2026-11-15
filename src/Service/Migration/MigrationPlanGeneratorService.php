@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service;
+namespace App\Service\Migration;
 
 use Symfony\AI\Agent\AgentInterface;
 use Symfony\AI\Platform\Message\Message;

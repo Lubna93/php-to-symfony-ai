@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service;
+namespace App\Service\Analysis;
 
 use PhpParser\Node;
 use PhpParser\NodeFinder;

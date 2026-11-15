@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service;
+namespace App\Service\Analysis;
 
 use Symfony\Component\Finder\Finder;
 use App\Entity\MigrationProject;

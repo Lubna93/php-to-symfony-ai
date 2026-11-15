@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service;
+namespace App\Service\Migration;
 
 use App\Entity\MigrationProject;
 use League\CommonMark\CommonMarkConverter;

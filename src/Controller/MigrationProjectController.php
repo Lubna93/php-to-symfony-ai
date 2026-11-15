@@ -11,17 +11,17 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Form\ProjectUploadType;
-use App\Service\ProjectUploadService;
-use App\Service\ProjectExtractionService;
-use App\Service\PhpFileScannerService;
-use App\Service\MigrationPlanGeneratorService;
+use App\Service\Project\ProjectUploadService;
+use App\Service\Project\ProjectExtractionService;
+use App\Service\Analysis\PhpFileScannerService;
+use App\Service\Migration\MigrationPlanGeneratorService;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
-use App\Service\MigrationPlanReaderService;
-use App\Service\PhpCodeMigrationService;
+use App\Service\Migration\MigrationPlanReaderService;
+use App\Service\Migration\PhpCodeMigrationService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use App\Service\ProjectSourceFileService;
+use App\Service\Project\ProjectSourceFileService;
 
 class MigrationProjectController extends AbstractController
 {

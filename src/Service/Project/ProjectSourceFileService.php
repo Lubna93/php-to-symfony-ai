@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Service;
+namespace App\Service\Project;
 
 use App\Entity\MigrationProject;
+use App\Service\Analysis\PhpFileScannerService;
+use App\Service\Security\SensitiveDataFilterService;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
