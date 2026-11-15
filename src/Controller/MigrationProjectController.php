@@ -17,6 +17,11 @@ use App\Service\PhpFileScannerService;
 use App\Service\MigrationPlanGeneratorService;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use App\Service\MigrationPlanReaderService;
+use App\Service\PhpCodeMigrationService;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use App\Service\ProjectSourceFileService;
 
 class MigrationProjectController extends AbstractController
 {
@@ -78,8 +83,6 @@ class MigrationProjectController extends AbstractController
                 $this->addFlash('danger', $e->getMessage());
             }
         }
-
-        $analysis = null;
 
         $migrationPlan = $planReader->read($project);
 
@@ -182,6 +185,65 @@ class MigrationProjectController extends AbstractController
         return $this->redirectToRoute('app_project_show', [
             'uid' => $project->getUid()->toRfc4122(),
         ]);
+    }
+
+    #[Route('/projects/{uid}/migrate-code', name: 'app_project_migrate_code', methods: ['POST'])]
+    public function migrateCode(
+        #[MapEntity(mapping: ['uid' => 'uid'])]
+        MigrationProject $project,
+        Request $request,
+        ProjectSourceFileService $sourceFileService,
+        PhpCodeMigrationService $codeMigrationService
+    ): JsonResponse {
+        try {
+            $this->validateMigrationRequest($project, $request);
+
+            $selectedFile = $sourceFileService->getSelectedPhpFile(
+                $project,
+                $request->request->get('file')
+            );
+
+            $result = $codeMigrationService->migrate(
+                $selectedFile['sourceCode'],
+                $selectedFile['path'],
+                $selectedFile['analysis'],
+                $selectedFile['dependencyContext']
+            );
+
+            if (trim($result) === '') {
+                throw new \RuntimeException('AI returned an empty response.');
+            }
+
+            return $this->json([
+                'file' => $selectedFile['path'],
+                'sourceCode' => $selectedFile['sourceCode'],
+                'generatedCode' => $result,
+            ]);
+        } catch (HttpExceptionInterface $e) {
+            return $this->json([
+                'error' => $e->getMessage(),
+            ], $e->getStatusCode());
+        } catch (\Throwable $e) {
+            return $this->json([
+                'error' => 'Code migration failed. Check the application logs.',
+            ], 500);
+        }
+    }
+
+    private function validateMigrationRequest(
+        MigrationProject $project,
+        Request $request
+    ): void {
+        if (!$this->isCsrfTokenValid(
+            'migrate-code' . $project->getId(),
+            $request->request->get('_token')
+        )) {
+            throw new AccessDeniedHttpException('Invalid CSRF token.');
+        }
+
+        if ($project->getStatus() !== StatusType::EXTRACTED) {
+            throw new AccessDeniedHttpException('Project must be extracted first.');
+        }
     }
 
 }

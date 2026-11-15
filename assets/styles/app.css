@@ -390,6 +390,29 @@ body {
     overflow-x: auto;
 }
 
+.migration-markdown h1,
+.migration-markdown h2,
+.migration-markdown h3 {
+    color: #f5f5f5;
+    margin: 1.5rem 0 0.75rem;
+}
+
+.migration-markdown h1 { font-size: 1.25rem; }
+.migration-markdown h2 { font-size: 1.1rem; }
+.migration-markdown h3 { font-size: 1rem; }
+
+.migration-markdown pre {
+    background: #181818;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+}
+
+.migration-markdown p,
+.migration-markdown li {
+    line-height: 1.7;
+}
+
 /* Responsive */
 
 @media (min-width: 1200px) {

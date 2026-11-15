@@ -29,5 +29,6 @@
 {% if analysis is not null and analysis.totalFiles > 0 %}
     {{ include('migration_project/_components/_file_details_modal.html.twig') }}
     {{ include('migration_project/_components/_dependency_modal.html.twig') }}
+    {{ include('migration_project/_components/_code_migration_modal.html.twig') }}
 {% endif %}
 {% endblock %}

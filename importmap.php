@@ -35,4 +35,10 @@ return [
         'version' => '5.3.8',
         'type' => 'css',
     ],
+    'marked' => [
+        'version' => '18.2.0',
+    ],
+    'highlight.js' => [
+        'version' => '11.12.0',
+    ],
 ];
