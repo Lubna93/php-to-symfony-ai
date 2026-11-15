@@ -413,6 +413,52 @@ body {
     line-height: 1.7;
 }
 
+/* framework-info */
+.framework-info {
+    padding: 16px 20px;
+    background: #1d242d;
+    border: 1px solid #303a45;
+    border-radius: 12px;
+}
+
+.framework-info-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: rgba(235, 155, 75, 0.12);
+    color: #eba35b;
+    font-size: 20px;
+}
+
+.framework-info-label {
+    color: #8f9ba8;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.framework-info-name {
+    color: #f1f3f5;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.framework-info-version {
+    color: #aab4bf;
+    font-size: 12px;
+    font-weight: 400;
+    margin-left: 8px;
+}
+
+.framework-info-status {
+    color: #8db9a0;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+
 /* Responsive */
 
 @media (min-width: 1200px) {

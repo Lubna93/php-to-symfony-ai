@@ -27,6 +27,13 @@ class PhpFileScannerService
             ->files()
             ->in($directory)
             ->name('*.php')
+            ->exclude([
+                'vendor',
+                'node_modules',
+                'var/cache',
+                'var/log',
+                'cache',
+            ])
             ->ignoreVCS(true)
             ->ignoreDotFiles(true)
             ->sortByName();

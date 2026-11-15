@@ -22,6 +22,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use App\Service\Project\ProjectSourceFileService;
+use App\Service\Analysis\FrameworkDetectorService;
 
 class MigrationProjectController extends AbstractController
 {
@@ -58,7 +59,8 @@ class MigrationProjectController extends AbstractController
         EntityManagerInterface $entityManager,
         ProjectUploadService $uploadService,
         PhpFileScannerService $scanner,
-        MigrationPlanReaderService $planReader
+        MigrationPlanReaderService $planReader,
+        FrameworkDetectorService $frameworkDetector,
     ): Response {
         $form = $this->createForm(ProjectUploadType::class);
         $form->handleRequest($request);
@@ -86,9 +88,20 @@ class MigrationProjectController extends AbstractController
 
         $migrationPlan = $planReader->read($project);
 
-        $analysis = $project->getStatus() === StatusType::EXTRACTED
-            ? $scanner->scanProject($project)
-            : null;
+        $analysis = null;
+        $detectedFramework = null;
+
+        if ($project->getStatus() === StatusType::EXTRACTED) {
+            $analysis = $scanner->scanProject($project);
+
+            $extractedPath = sprintf(
+                '%s/var/storage/projects/%d/extracted',
+                $this->getParameter('kernel.project_dir'),
+                $project->getId()
+            );
+
+            $detectedFramework = $frameworkDetector->detect($extractedPath);
+}
 
         $migrationPlanHtml = $migrationPlan
             ? $planReader->renderHtml($migrationPlan)
@@ -100,6 +113,7 @@ class MigrationProjectController extends AbstractController
             'analysis' => $analysis,
             'migrationPlan' => $migrationPlan,
             'migrationPlanHtml' => $migrationPlanHtml,
+            'detectedFramework' => $detectedFramework,
         ]);
     }
 
@@ -109,19 +123,31 @@ class MigrationProjectController extends AbstractController
         MigrationProject $project,
         Request $request,
         ProjectExtractionService $extractionService,
+        FrameworkDetectorService $frameworkDetector,
         EntityManagerInterface $entityManager
     ): Response {
-        if (!$this->isCsrfTokenValid('extract' . $project->getId(), $request->request->get('_token'))) {
+        if (!$this->isCsrfTokenValid(
+            'extract' . $project->getId(),
+            $request->request->get('_token')
+        )) {
             throw $this->createAccessDeniedException('Invalid CSRF token.');
         }
 
         try {
-            $extractionService->extract($project);
+            $extractedPath = $extractionService->extract($project);
+
+            $detected = $frameworkDetector->detect($extractedPath);
 
             $project->setStatus(StatusType::EXTRACTED);
             $entityManager->flush();
 
-            $this->addFlash('success', 'ZIP extracted successfully.');
+            $this->addFlash(
+                'success',
+                sprintf(
+                    'ZIP extracted successfully. Detected framework: %s',
+                    $detected['framework']
+                )
+            );
         } catch (\RuntimeException $e) {
             $this->addFlash('danger', $e->getMessage());
         }
