@@ -25,10 +25,28 @@ use App\Service\Project\ProjectSourceFileService;
 use App\Service\Analysis\FrameworkDetectorService;
 use App\Entity\User;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Repository\MigrationProjectRepository;
 
 #[IsGranted('ROLE_USER')]
 class MigrationProjectController extends AbstractController
 {
+    #[Route('/projects', name: 'app_project_index', methods: ['GET'])]
+    public function index(
+        MigrationProjectRepository $projectRepository
+    ): Response {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $projects = $projectRepository->findBy(
+            ['owner' => $user],
+            ['createdAt' => 'DESC']
+        );
+
+        return $this->render('migration_project/index.html.twig', [
+            'projects' => $projects,
+        ]);
+    }
+
     #[Route('/projects/new', name: 'app_project_new')]
     public function new(
         Request $request,
@@ -177,7 +195,7 @@ class MigrationProjectController extends AbstractController
         MigrationPlanGeneratorService $planGenerator
     ): Response {
         $this->denyAccessUnlessOwner($project);
-        
+
         if (!$this->isCsrfTokenValid('generate-plan' . $project->getId(), $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Invalid CSRF token.');
         }

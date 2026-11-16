@@ -1,0 +1,64 @@
+
+<nav class="navbar navbar-expand-lg app-navbar">
+    <div class="container">
+        <a class="navbar-brand" href="{{ path('app_home') }}">
+            <span class="brand-icon">&lt;/&gt;</span>
+            PHP2Symfony <span class="brand-accent">AI</span>
+        </a>
+
+        <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+        >
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNavbar">
+            <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('app_home') }}#how-it-works">
+                        How it works
+                    </a>
+                </li>
+
+                {% if app.user %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('app_project_index') }}">
+                            My Projects
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('app_project_new') }}">
+                            New Project
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <span class="nav-link user-name">
+                            {{ app.user.username }}
+                        </span>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{{ path('app_logout') }}"
+                           class="btn btn-outline-secondary btn-sm">
+                            Logout
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a href="{{ path('connect_github') }}"
+                           class="btn btn-primary btn-sm">
+                            Continue with GitHub
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>

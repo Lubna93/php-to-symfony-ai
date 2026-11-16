@@ -19,6 +19,10 @@
         {% endif %}
     </head>
     <body>
-        {% block body %}{% endblock %}
+        {% include 'components/_navbar.html.twig' %}
+
+        <main>
+            {% block body %}{% endblock %}
+        </main>
     </body>
 </html>
