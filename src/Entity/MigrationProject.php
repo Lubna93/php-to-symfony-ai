@@ -140,4 +140,13 @@ class MigrationProject
         return $this;
     }
 
+    public function getStatusLabel(): string
+    {
+        $status = $this->getStatus();
+
+        return $status instanceof \BackedEnum
+            ? (string) $status->value
+            : $status->name;
+    }
+    
 }
