@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service;
+namespace App\Service\Analysis;
 
 use Symfony\Component\Finder\Finder;
 use App\Entity\MigrationProject;
@@ -27,6 +27,13 @@ class PhpFileScannerService
             ->files()
             ->in($directory)
             ->name('*.php')
+            ->exclude([
+                'vendor',
+                'node_modules',
+                'var/cache',
+                'var/log',
+                'cache',
+            ])
             ->ignoreVCS(true)
             ->ignoreDotFiles(true)
             ->sortByName();
@@ -37,9 +44,12 @@ class PhpFileScannerService
         $totalDatabaseCalls = 0;
         $totalLegacyCalls = 0;
         $totalSqlOperations = 0;
+        $constantsCache = [];
 
         foreach ($finder as $file) {
-            $structure = $this->structureAnalyzer->analyze($file->getRealPath());
+            $filePath = $file->getRealPath();
+            $pathConstants = $this->getPathConstantsForFile($filePath, $directory, $constantsCache);
+            $structure = $this->structureAnalyzer->analyze($filePath, $pathConstants);
 
             $classCount = count($structure['classes']);
             $functionCount = count($structure['functions']);
@@ -72,6 +82,7 @@ class PhpFileScannerService
 
             $files[] = [
                 'path' => $file->getRelativePathname(),
+                'fileType' => $structure['fileType'],
                 'size' => $file->getSize(),
                 'lines' => count(file($file->getRealPath())),
                 'namespace' => $structure['namespace'],
@@ -139,6 +150,51 @@ class PhpFileScannerService
         }
 
         return $resolved;
+    }
+
+    private function getPathConstantsForFile(
+        string $filePath,
+        string $rootDirectory,
+        array &$cache
+    ): array {
+        $root = realpath($rootDirectory);
+        $current = realpath(dirname($filePath));
+
+        if ($root === false || $current === false) {
+            return [];
+        }
+
+        if (
+            $current !== $root
+            && !str_starts_with($current, $root . DIRECTORY_SEPARATOR)
+        ) {
+            return [];
+        }
+
+        while (true) {
+            if (is_file($current . DIRECTORY_SEPARATOR . 'config.php')) {
+                if (!array_key_exists($current, $cache)) {
+                    $cache[$current] = $this->structureAnalyzer
+                        ->extractProjectPathConstants($current);
+                }
+
+                return $cache[$current];
+            }
+
+            if ($current === $root) {
+                break;
+            }
+
+            $parent = dirname($current);
+
+            if ($parent === $current) {
+                break;
+            }
+
+            $current = $parent;
+        }
+
+        return [];
     }
 
     public function scanProject(MigrationProject $project): array

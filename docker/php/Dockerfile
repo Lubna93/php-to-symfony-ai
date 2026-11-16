@@ -1,8 +1,17 @@
 FROM php:8.4-apache
 
 RUN apt-get update && apt-get install -y \
-    git unzip libicu-dev libzip-dev \
-    && docker-php-ext-install intl pdo_mysql zip opcache \
+    git \
+    unzip \
+    libicu-dev \
+    libzip-dev \
+    libonig-dev \
+    && docker-php-ext-install \
+        intl \
+        pdo_mysql \
+        zip \
+        opcache \
+        mbstring \
     && a2enmod rewrite \
     && rm -rf /var/lib/apt/lists/*
 
@@ -15,5 +24,7 @@ RUN sed -ri \
     /etc/apache2/sites-available/*.conf \
     /etc/apache2/apache2.conf \
     /etc/apache2/conf-available/*.conf
+
+COPY docker/php/custom.ini /usr/local/etc/php/conf.d/custom.ini
 
 WORKDIR /var/www/html

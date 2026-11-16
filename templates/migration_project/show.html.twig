@@ -7,7 +7,9 @@
     <div class="container">
 
         {{ include('migration_project/_components/_project_header.html.twig') }}
-
+        
+        {{ include('migration_project/_components/_framework_info.html.twig') }}
+        
         {% for label, messages in app.flashes %}
             {% for message in messages %}
                 <div class="alert alert-{{ label }}" role="alert">
@@ -29,5 +31,6 @@
 {% if analysis is not null and analysis.totalFiles > 0 %}
     {{ include('migration_project/_components/_file_details_modal.html.twig') }}
     {{ include('migration_project/_components/_dependency_modal.html.twig') }}
+    {{ include('migration_project/_components/_code_migration_modal.html.twig') }}
 {% endif %}
 {% endblock %}

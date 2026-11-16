@@ -2,7 +2,10 @@
      id="phpFilesModal"
      tabindex="-1"
      aria-labelledby="phpFilesModalLabel"
-     aria-hidden="true">
+     aria-hidden="true"
+     data-controller="code-migration"
+     data-code-migration-url-value="{{ path('app_project_migrate_code', { uid: project.uid }) }}"
+     data-code-migration-token-value="{{ csrf_token('migrate-code' ~ project.id) }}">
 
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content bg-dark text-light border-secondary">
@@ -32,6 +35,7 @@
                                 <th>DB Calls</th>
                                 <th>Legacy Calls</th>
                                 <th>Review Priority</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
 
@@ -67,6 +71,15 @@
                                         }}">
                                             {{ file.priority }}
                                         </span>
+                                    </td>
+
+                                    <td>
+                                        <button type="button"
+                                                class="btn btn-outline-warning btn-sm"
+                                                data-action="click->code-migration#migrate"
+                                                data-code-migration-file-param="{{ file.path }}">
+                                            Migrate with AI
+                                        </button>
                                     </td>
                                 </tr>
                             {% endfor %}

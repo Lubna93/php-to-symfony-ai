@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service;
+namespace App\Service\Analysis;
 
 use PhpParser\Node;
 use PhpParser\NodeFinder;
@@ -9,7 +9,10 @@ use PhpParser\Node\Expr\BinaryOp\Concat;
 
 class PhpStructureAnalyzerService
 {
-    public function analyze(string $filePath): array
+    public function analyze(
+        string $filePath,
+        array $projectConstants = []
+    ): array
     {
         $code = file_get_contents($filePath);
 
@@ -21,6 +24,10 @@ class PhpStructureAnalyzerService
         $nodes = $parser->parse($code) ?? [];
 
         $finder = new NodeFinder();
+        $constants = array_merge(
+            $projectConstants,
+            $this->extractPathConstants($nodes, $filePath)
+        );
 
         $namespaces = $finder->findInstanceOf(
             $nodes,
@@ -63,7 +70,7 @@ class PhpStructureAnalyzerService
         }
 
         foreach ($includes as $include) {
-            $path = $this->resolveIncludePath($include->expr, $filePath);
+            $path = $this->resolveIncludePath($include->expr, $filePath, $constants);
 
             $dependencies['includes'][] = [
                 'type' => match ($include->type) {
@@ -162,6 +169,7 @@ class PhpStructureAnalyzerService
         }
 
         return [
+            'fileType' => $this->detectFileType($nodes),
             'namespace' => isset($namespaces[0])
                 ? $namespaces[0]->name?->toString()
                 : null,
@@ -183,25 +191,182 @@ class PhpStructureAnalyzerService
         ];
     }
 
-    private function resolveIncludePath(Node\Expr $expr, string $filePath): ?string
+    public function extractProjectPathConstants(string $directory): array
     {
-        $path = null;
+        $constants = [];
+        $configPath = realpath($directory . DIRECTORY_SEPARATOR . 'config.php');
+        $rootPath = realpath($directory);
 
-        if ($expr instanceof Node\Scalar\String_) {
-            $path = $expr->value;
-        } elseif ($expr instanceof Node\Scalar\MagicConst\Dir) {
-            $path = dirname($filePath);
-        } elseif ($expr instanceof Node\Scalar\MagicConst\File) {
-            $path = $filePath;
-        } elseif ($expr instanceof Concat) {
-            $left = $this->resolveIncludePath($expr->left, $filePath);
-            $right = $this->resolveIncludePath($expr->right, $filePath);
+        if (
+            $configPath === false
+            || $rootPath === false
+            || !str_starts_with($configPath, $rootPath . DIRECTORY_SEPARATOR)
+            || !is_file($configPath)
+        ) {
+            return [];
+        }
 
-            if ($left !== null && $right !== null) {
-                $path = $left . $right;
+        $code = file_get_contents($configPath);
+
+        if ($code === false) {
+            return [];
+        }
+
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        $nodes = $parser->parse($code) ?? [];
+
+        return $this->extractPathConstants($nodes, $configPath);
+    }
+
+    private function extractPathConstants(array $nodes, string $filePath): array
+    {
+        $constants = [];
+        $finder = new NodeFinder();
+
+        $definitions = $finder->find($nodes, static function (Node $node): bool {
+            return $node instanceof Node\Expr\FuncCall
+                && $node->name instanceof Node\Name
+                && strtolower($node->name->toString()) === 'define';
+        });
+
+        foreach ($definitions as $definition) {
+            if (count($definition->args) < 2) {
+                continue;
+            }
+
+            $name = $definition->args[0]->value;
+
+            if (!$name instanceof Node\Scalar\String_) {
+                continue;
+            }
+
+            $value = $this->resolveIncludePath(
+                $definition->args[1]->value,
+                $filePath,
+                $constants
+            );
+
+            if ($value !== null) {
+                $constants[$name->value] = $value;
             }
         }
 
-        return $path;
+        return $constants;
     }
+
+    private function resolveIncludePath(
+        Node\Expr $expr,
+        string $filePath,
+        array $constants = []
+    ): ?string {
+        if ($expr instanceof Node\Scalar\String_) {
+            return $expr->value;
+        }
+
+        if ($expr instanceof Node\Scalar\MagicConst\Dir) {
+            return dirname($filePath);
+        }
+
+        if ($expr instanceof Node\Scalar\MagicConst\File) {
+            return $filePath;
+        }
+
+        if ($expr instanceof Node\Expr\ConstFetch) {
+            $name = $expr->name->toString();
+
+            return $constants[$name] ?? null;
+        }
+
+        if ($expr instanceof Concat) {
+            $left = $this->resolveIncludePath(
+                $expr->left,
+                $filePath,
+                $constants
+            );
+
+            $right = $this->resolveIncludePath(
+                $expr->right,
+                $filePath,
+                $constants
+            );
+
+            if ($left !== null && $right !== null) {
+                return $left . $right;
+            }
+        }
+        if (
+            $expr instanceof Node\Expr\FuncCall
+            && $expr->name instanceof Node\Name
+            && count($expr->args) === 1
+        ) {
+            $functionName = strtolower($expr->name->toString());
+
+            if (in_array($functionName, ['dirname', 'realpath'], true)) {
+                $argument = $this->resolveIncludePath(
+                    $expr->args[0]->value,
+                    $filePath,
+                    $constants
+                );
+
+                if ($argument === null) {
+                    return null;
+                }
+
+                if ($functionName === 'dirname') {
+                    return dirname($argument);
+                }
+
+                $resolved = realpath($argument);
+
+                return $resolved !== false ? $resolved : null;
+            }
+        }
+        return null;
+    }
+
+
+    private function detectFileType(array $nodes): string
+    {
+        $finder = new NodeFinder();
+
+        $classes = $finder->findInstanceOf($nodes, Node\Stmt\Class_::class);
+
+        foreach ($classes as $class) {
+            $name = $class->name?->toString() ?? '';
+            $parent = $class->extends?->toString() ?? '';
+
+            if (
+                str_ends_with($name, 'Controller')
+                || str_ends_with($parent, 'Controller')
+            ) {
+                return 'controller';
+            }
+        }
+
+        $hasHtml = $finder->findFirstInstanceOf(
+            $nodes,
+            Node\Stmt\InlineHTML::class
+        ) !== null;
+
+        $hasExecutablePhp = $finder->findFirst(
+            $nodes,
+            static fn (Node $node): bool =>
+                $node instanceof Node\Stmt\Class_
+                || $node instanceof Node\Stmt\Function_
+                || $node instanceof Node\Expr\FuncCall
+                || $node instanceof Node\Expr\MethodCall
+                || $node instanceof Node\Expr\Assign
+        ) !== null;
+
+        if ($hasHtml && !$hasExecutablePhp) {
+            return 'template';
+        }
+
+        if ($hasHtml) {
+            return 'mixed';
+        }
+
+        return 'php';
+    }
+
 }

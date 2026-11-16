@@ -17,7 +17,7 @@ class ProjectUploadType extends AbstractType
             'mapped' => false,
             'constraints' => [
                 new File(
-                    maxSize: '20M',
+                    maxSize: '100M',
                     mimeTypes: [
                         'application/zip',
                         'application/x-zip-compressed',

@@ -1,0 +1,41 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}
+    Dashboard
+{% endblock %}
+
+{% block main %}
+    <div class="row g-4 mt-2">
+
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="text-muted mb-2">
+                        <i class="fa fa-users me-2"></i>
+                        Total Users
+                    </div>
+
+                    <h2 class="fw-bold mb-0">
+                        {{ totalUsers }}
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="text-muted mb-2">
+                        <i class="fa fa-folder-open me-2"></i>
+                        Total Projects
+                    </div>
+
+                    <h2 class="fw-bold mb-0">
+                        {{ totalProjects }}
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}
