@@ -59,6 +59,9 @@
             "./config/packages/knpu_oauth2_client.yaml"
         ]
     },
+    "lubna/custom-error-bundle": {
+        "version": "v1.1.0"
+    },
     "phpunit/phpunit": {
         "version": "13.4",
         "recipe": {

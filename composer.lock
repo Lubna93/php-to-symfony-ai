@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "165cc20aaf042ab26038226e7c3ca767",
+    "content-hash": "8e451d4da3b1f983e3814957e7de3038",
     "packages": [
         {
             "name": "composer/semver",
@@ -2164,6 +2164,42 @@
                 "source": "https://github.com/thephpleague/oauth2-github/tree/3.1.1"
             },
             "time": "2024-09-03T10:42:10+00:00"
+        },
+        {
+            "name": "lubna/custom-error-bundle",
+            "version": "v1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Lubna93/CustomErrorBundle.git",
+                "reference": "ccd46aadbe18b0b8611e437c85689618f9835c51"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Lubna93/CustomErrorBundle/zipball/ccd46aadbe18b0b8611e437c85689618f9835c51",
+                "reference": "ccd46aadbe18b0b8611e437c85689618f9835c51",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4",
+                "symfony/framework-bundle": "^5.4 || ^6.0 || ^7.0",
+                "twig/twig": "^2.12 || ^3.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "CustomError\\Bundle\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Symfony bundle to customize and override default error pages (404, 403, 500, 401) with Twig templates and error controller support.",
+            "support": {
+                "issues": "https://github.com/Lubna93/CustomErrorBundle/issues",
+                "source": "https://github.com/Lubna93/CustomErrorBundle/tree/v1.1.0"
+            },
+            "time": "2025-06-13T11:42:49+00:00"
         },
         {
             "name": "monolog/monolog",

@@ -32,3 +32,6 @@ services:
     App\Service\Migration\MigrationPlanGeneratorService:
         arguments:
             $migrationAgent: '@ai.traceable_agent.migration'
+
+    CustomError\Bundle\Controller\ErrorController:
+        tags: ['controller.service_arguments']
