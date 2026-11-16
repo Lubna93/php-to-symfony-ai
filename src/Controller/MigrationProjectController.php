@@ -23,7 +23,10 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use App\Service\Project\ProjectSourceFileService;
 use App\Service\Analysis\FrameworkDetectorService;
+use App\Entity\User;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+#[IsGranted('ROLE_USER')]
 class MigrationProjectController extends AbstractController
 {
     #[Route('/projects/new', name: 'app_project_new')]
@@ -32,6 +35,10 @@ class MigrationProjectController extends AbstractController
         EntityManagerInterface $entityManager
     ): Response {
         $project = new MigrationProject();
+
+        /** @var User $user */
+        $user = $this->getUser();
+        $project->setOwner($user);
 
         $form = $this->createForm(MigrationProjectType::class, $project);
         $form->handleRequest($request);
@@ -62,6 +69,7 @@ class MigrationProjectController extends AbstractController
         MigrationPlanReaderService $planReader,
         FrameworkDetectorService $frameworkDetector,
     ): Response {
+        $this->denyAccessUnlessOwner($project);
         $form = $this->createForm(ProjectUploadType::class);
         $form->handleRequest($request);
 
@@ -101,7 +109,7 @@ class MigrationProjectController extends AbstractController
             );
 
             $detectedFramework = $frameworkDetector->detect($extractedPath);
-}
+        }
 
         $migrationPlanHtml = $migrationPlan
             ? $planReader->renderHtml($migrationPlan)
@@ -126,6 +134,8 @@ class MigrationProjectController extends AbstractController
         FrameworkDetectorService $frameworkDetector,
         EntityManagerInterface $entityManager
     ): Response {
+        $this->denyAccessUnlessOwner($project);
+
         if (!$this->isCsrfTokenValid(
             'extract' . $project->getId(),
             $request->request->get('_token')
@@ -166,6 +176,8 @@ class MigrationProjectController extends AbstractController
         PhpFileScannerService $scanner,
         MigrationPlanGeneratorService $planGenerator
     ): Response {
+        $this->denyAccessUnlessOwner($project);
+        
         if (!$this->isCsrfTokenValid('generate-plan' . $project->getId(), $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Invalid CSRF token.');
         }
@@ -226,6 +238,7 @@ class MigrationProjectController extends AbstractController
         PhpCodeMigrationService $codeMigrationService
     ): JsonResponse {
         try {
+            $this->denyAccessUnlessOwner($project);
             $this->validateMigrationRequest($project, $request);
 
             $selectedFile = $sourceFileService->getSelectedPhpFile(
@@ -275,6 +288,17 @@ class MigrationProjectController extends AbstractController
 
         if ($project->getStatus() !== StatusType::EXTRACTED) {
             throw new AccessDeniedHttpException('Project must be extracted first.');
+        }
+    }
+
+    private function denyAccessUnlessOwner(MigrationProject $project): void
+    {
+        $user = $this->getUser();
+
+        if (!$user instanceof User || $project->getOwner()?->getId() !== $user->getId()) {
+            throw $this->createAccessDeniedException(
+                'You do not have access to this project.'
+            );
         }
     }
 

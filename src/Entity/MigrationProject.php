@@ -36,6 +36,10 @@ class MigrationProject
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $archiveFilename = null;
 
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?User $owner = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -120,6 +124,18 @@ class MigrationProject
     public function setArchiveFilename(?string $archiveFilename): static
     {
         $this->archiveFilename = $archiveFilename;
+
+        return $this;
+    }
+
+    public function getOwner(): ?User
+    {
+        return $this->owner;
+    }
+
+    public function setOwner(?User $owner): static
+    {
+        $this->owner = $owner;
 
         return $this;
     }
