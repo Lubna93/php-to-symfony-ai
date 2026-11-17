@@ -30,7 +30,6 @@ class MigrationProjectType extends AbstractType
                     'Zend Framework' => 'Zend Framework',
                     'Symfony (Legacy)' => 'Symfony Legacy',
                     'Laravel' => 'Laravel',
-                    'Other' => 'Other',
                 ],
             ])
             ->add('targetFramework', ChoiceType::class, [
@@ -40,8 +39,6 @@ class MigrationProjectType extends AbstractType
                     'Symfony 6.4 LTS' => 'Symfony 6.4',
                     'Symfony 7.4 LTS' => 'Symfony 7.4',
                     'Symfony 8.0' => 'Symfony 8.0',
-                    'Laravel' => 'Laravel',
-                    'Other' => 'Other',
                 ],
             ]);
     }

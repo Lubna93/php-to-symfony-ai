@@ -209,6 +209,8 @@ body {
     --bs-btn-hover-color: var(--bg);
     --bs-btn-hover-bg: var(--accent-secondary);
     --bs-btn-hover-border-color: var(--accent-secondary);
+    --bs-btn-active-bg: #D3C5F5;
+    --bs-btn-active-border-color: #D3C5F5;
 }
 
 /* Technologies */
