@@ -31,7 +31,11 @@ services:
 
     App\Service\Migration\MigrationPlanGeneratorService:
         arguments:
-            $migrationAgent: '@ai.traceable_agent.migration'
+            $migrationAgent: '@ai.agent.migration'
 
     CustomError\Bundle\Controller\ErrorController:
         tags: ['controller.service_arguments']
+
+    App\Service\Migration\Generator\PlainPhp\PlainPhpProjectGenerator:
+        arguments:
+            $migrationAgent: '@ai.agent.migration'
