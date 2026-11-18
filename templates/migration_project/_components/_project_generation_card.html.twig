@@ -1,0 +1,80 @@
+<div class="feature-card mb-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Symfony Project Generation</h5>
+
+        {% if project.sourceFramework == 'Plain PHP' %}
+            <span class="badge text-bg-secondary">Experimental</span>
+        {% else %}
+            <span class="badge text-bg-secondary">Coming Soon</span>
+        {% endif %}
+    </div>
+
+    <p class="text-secondary small mb-2">
+        Generate a modern Symfony project from your legacy PHP
+        application, including controllers, entities, forms,
+        services, repositories and Twig templates.
+    </p>
+
+    {% if project.sourceFramework == 'Plain PHP' %}
+
+        <p class="text-secondary small mb-3">
+            Generated code requires review before use.
+        </p>
+
+        <div class="d-flex flex-wrap gap-2">
+            {% if hasGeneratedArchive %}
+                <a
+                    href="{{ path('app_project_download_archive', {uid: project.uid}) }}"
+                    class="btn btn-primary text-dark"
+                >
+                    Download ZIP
+                </a>
+            {% endif %}
+
+            <form
+                method="post"
+                action="{{ path('app_project_generate_archive', {uid: project.uid}) }}"
+                onsubmit="
+                    const button = this.querySelector('button');
+                    button.disabled = true;
+                    button.querySelector('.button-text').classList.add('d-none');
+                    button.querySelector('.button-loading').classList.remove('d-none');
+                "
+            >
+                <input
+                    type="hidden"
+                    name="_token"
+                    value="{{ csrf_token('generate-archive' ~ project.id) }}"
+                >
+
+                <button type="submit" class="btn btn-outline-secondary">
+                    <span class="button-text">
+                        {{ hasGeneratedArchive
+                            ? 'Regenerate Symfony Files'
+                            : 'Generate Symfony Files'
+                        }}
+                    </span>
+
+                    <span class="button-loading d-none">
+                        <span
+                            class="spinner-border spinner-border-sm me-2"
+                            role="status"
+                            aria-hidden="true"
+                        ></span>
+                        Generating...
+                    </span>
+                </button>
+            </form>
+        </div>
+
+    {% else %}
+
+        <p class="text-secondary small mb-0">
+            This feature is coming soon for other frameworks.
+            Currently available for Plain PHP projects only.
+        </p>
+
+    {% endif %}
+
+</div>

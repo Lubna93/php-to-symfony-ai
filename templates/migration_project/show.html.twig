@@ -22,6 +22,7 @@
 
         {% if analysis is not null %}
             {{ include('migration_project/_components/_analysis_card.html.twig') }}
+            {{ include('migration_project/_components/_project_generation_card.html.twig') }}
             {{ include('migration_project/_components/_migration_plan_card.html.twig') }}
         {% endif %}
 
