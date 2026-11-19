@@ -28,3 +28,13 @@ RUN sed -ri \
 COPY docker/php/custom.ini /usr/local/etc/php/conf.d/custom.ini
 
 WORKDIR /var/www/html
+
+RUN printf '%s\n' \
+    '<Directory /var/www/html/public>' \
+    '    AllowOverride None' \
+    '    Require all granted' \
+    '    DirectoryIndex index.php' \
+    '    FallbackResource /index.php' \
+    '</Directory>' \
+    > /etc/apache2/conf-available/symfony.conf \
+    && a2enconf symfony
