@@ -31,6 +31,8 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Filesystem\Filesystem;
 use Psr\Log\LoggerInterface;
+use League\CommonMark\CommonMarkConverter;
+use Twig\Environment;
 
 #[IsGranted('ROLE_USER')]
 class MigrationProjectController extends AbstractController
@@ -428,6 +430,93 @@ class MigrationProjectController extends AbstractController
                 'You do not have access to this project.'
             );
         }
+    }
+
+    #[Route('/projects/{uid}/download-report', name: 'app_project_download_report', methods: ['GET'])]
+    public function downloadReport(
+        #[MapEntity(mapping: ['uid' => 'uid'])]
+        MigrationProject $project,
+        PhpFileScannerService $scanner,
+        FrameworkDetectorService $frameworkDetector,
+        Environment $twig
+    ): Response {
+        $this->denyAccessUnlessOwner($project);
+
+        $projectDirectory = sprintf(
+            '%s/var/storage/projects/%d',
+            $this->getParameter('kernel.project_dir'),
+            $project->getId()
+        );
+
+        $planPath = $projectDirectory . '/migration-plan.md';
+
+        if (!is_file($planPath)) {
+            throw $this->createNotFoundException(
+                'Migration plan not found.'
+            );
+        }
+
+        $analysis = $scanner->scanProject($project);
+
+        $extractedPath = sprintf(
+            '%s/var/storage/projects/%d/extracted',
+            $this->getParameter('kernel.project_dir'),
+            $project->getId()
+        );
+
+        $detectedFramework = $frameworkDetector->detect($extractedPath);
+
+        $totalLines = array_sum(
+            array_column($analysis['files'], 'lines')
+        );
+
+        $priorities = [
+            'High' => 0,
+            'Medium' => 0,
+            'Low' => 0,
+        ];
+
+        foreach ($analysis['files'] as $file) {
+            $priority = $file['priority'];
+
+            if (isset($priorities[$priority])) {
+                $priorities[$priority]++;
+            }
+        }
+
+        $converter = new CommonMarkConverter();
+
+        $planHtml = $converter->convert(
+            file_get_contents($planPath)
+        )->getContent();
+
+        $html = $twig->render(
+            'migration_project/report.html.twig',
+            [
+                'project' => $project,
+                'analysis' => $analysis,
+                'totalLines' => $totalLines,
+                'priorities' => $priorities,
+                'planHtml' => $planHtml,
+                'detectedFramework' => $detectedFramework,
+                'generatedAt' => new \DateTimeImmutable(),
+            ]
+        );
+
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        return new Response(
+            $dompdf->output(),
+            200,
+            [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' =>
+                    'attachment; filename="migration-report.pdf"',
+            ]
+        );
     }
 
 }
