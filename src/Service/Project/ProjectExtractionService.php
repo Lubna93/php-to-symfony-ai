@@ -7,7 +7,7 @@ use Symfony\Component\Filesystem\Filesystem;
 
 class ProjectExtractionService
 {
-    private const MAX_FILES = 2000;
+    private const MAX_FILES = 5000;
     private const MAX_SIZE = 100 * 1024 * 1024;
 
     public function __construct(

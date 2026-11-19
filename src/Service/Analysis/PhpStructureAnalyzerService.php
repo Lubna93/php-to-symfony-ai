@@ -6,6 +6,7 @@ use PhpParser\Node;
 use PhpParser\NodeFinder;
 use PhpParser\ParserFactory;
 use PhpParser\Node\Expr\BinaryOp\Concat;
+use PhpParser\Error;
 
 class PhpStructureAnalyzerService
 {
@@ -21,8 +22,32 @@ class PhpStructureAnalyzerService
         }
 
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
-        $nodes = $parser->parse($code) ?? [];
 
+        try {
+            $nodes = $parser->parse($code) ?? [];
+        } catch (Error $e) {
+            error_log(sprintf(
+                'PHP parsing failed for %s: %s',
+                $filePath,
+                $e->getMessage()
+            ));
+
+            return [
+                'fileType' => 'unknown',
+                'namespace' => null,
+                'classes' => [],
+                'functions' => [],
+                'dependencies' => [
+                    'uses' => [],
+                    'includes' => [],
+                    'extends' => [],
+                    'implements' => [],
+                ],
+                'databaseCalls' => [],
+                'legacyCalls' => [],
+                'sqlOperations' => [],
+            ];
+        }
         $finder = new NodeFinder();
         $constants = array_merge(
             $projectConstants,
@@ -213,7 +238,18 @@ class PhpStructureAnalyzerService
         }
 
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
-        $nodes = $parser->parse($code) ?? [];
+
+        try {
+            $nodes = $parser->parse($code) ?? [];
+        } catch (Error $e) {
+            error_log(sprintf(
+                'PHP config parsing failed for %s: %s',
+                $configPath,
+                $e->getMessage()
+            ));
+
+            return [];
+        }
 
         return $this->extractPathConstants($nodes, $configPath);
     }
