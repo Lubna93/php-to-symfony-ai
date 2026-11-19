@@ -10,10 +10,7 @@ use PhpParser\Error;
 
 class PhpStructureAnalyzerService
 {
-    public function analyze(
-        string $filePath,
-        array $projectConstants = []
-    ): array
+    public function analyze(string $filePath, array $projectConstants = []): array
     {
         $code = file_get_contents($filePath);
 
@@ -365,17 +362,47 @@ class PhpStructureAnalyzerService
     {
         $finder = new NodeFinder();
 
-        $classes = $finder->findInstanceOf($nodes, Node\Stmt\Class_::class);
+        $classes = $finder->findInstanceOf(
+            $nodes,
+            Node\Stmt\Class_::class
+        );
 
         foreach ($classes as $class) {
+            if ($class->isAnonymous()) {
+                continue;
+            }
+
             $name = $class->name?->toString() ?? '';
             $parent = $class->extends?->toString() ?? '';
+
+            $attributes = $class->attrGroups;
+
+            foreach ($attributes as $group) {
+                foreach ($group->attrs as $attribute) {
+                    $attributeName = $attribute->name->toString();
+
+                    if (
+                        $attributeName === 'ORM\Entity'
+                        || $attributeName === 'Doctrine\ORM\Mapping\Entity'
+                    ) {
+                        return 'entity';
+                    }
+                }
+            }
 
             if (
                 str_ends_with($name, 'Controller')
                 || str_ends_with($parent, 'Controller')
             ) {
                 return 'controller';
+            }
+
+            if (str_ends_with($name, 'Repository')) {
+                return 'repository';
+            }
+
+            if (str_ends_with($name, 'Service')) {
+                return 'service';
             }
         }
 

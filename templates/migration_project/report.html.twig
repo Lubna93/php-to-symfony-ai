@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -139,64 +138,90 @@
             font-weight: bold;
         }
 
-        /* 4. AI Migration Plan */
+        /* AI Migration Plan - compact Markdown layout */
         .migration-plan {
-            font-size: 10px;
-            line-height: 1.45;
+            font-size: 9px;
+            line-height: 1.25;
         }
 
         .migration-plan h1 {
-            font-size: 16px;
-            margin: 14px 0 7px;
+            font-size: 14px;
+            margin: 8px 0 3px;
+            line-height: 1.2;
         }
 
         .migration-plan h2 {
-            font-size: 13px;
-            margin: 16px 0 8px;
-            padding-bottom: 4px;
+            font-size: 12px;
+            margin: 9px 0 4px;
+            padding-bottom: 2px;
+            line-height: 1.2;
         }
 
-        .migration-plan h3 {
-            font-size: 11px;
-            margin: 12px 0 6px;
+        .migration-plan h3,
+        .migration-plan h4 {
+            font-size: 10px;
+            margin: 7px 0 3px;
+            line-height: 1.2;
         }
 
         .migration-plan p {
-            margin: 5px 0;
+            margin: 2px 0 4px;
         }
 
         .migration-plan ul,
         .migration-plan ol {
-            margin: 6px 0;
-            padding-left: 20px;
+            margin: 2px 0 4px;
+            padding-left: 16px;
         }
 
         .migration-plan li {
-            margin-bottom: 3px;
+            margin: 0 0 1px;
+            padding: 0;
+        }
+
+        .migration-plan li p {
+            margin: 0;
         }
 
         .migration-plan pre {
             background-color: #f5f5f5;
-            padding: 8px;
-            font-size: 9px;
-            line-height: 1.3;
+            padding: 5px;
+            margin: 4px 0;
+            font-size: 8px;
+            line-height: 1.2;
             white-space: pre-wrap;
             overflow-wrap: break-word;
         }
 
         .migration-plan code {
             font-family: monospace;
-            font-size: 9px;
+            font-size: 8px;
         }
 
         .migration-plan table {
-            font-size: 9px;
-            margin: 8px 0;
+            font-size: 8px;
+            margin: 4px 0;
         }
 
         .migration-plan table th,
         .migration-plan table td {
-            padding: 4px 6px;
+            padding: 3px 5px;
+        }
+
+        /* Code Structure */
+        .structure-table {
+            margin-top: 6px;
+            font-size: 9px;
+        }
+
+        .structure-table th,
+        .structure-table td {
+            padding: 4px 7px;
+        }
+
+        .structure-table .structure-count {
+            width: 20%;
+            text-align: right;
         }
 
         /* 5. File Analysis */
@@ -369,10 +394,51 @@
         </table>
     </div>
 
-    {# 3. Migration Priorities #}
+    {# 3. Code Structure #}
+
+    {% set fileTypes = analysis.fileTypes|default({}) %}
+    {% set typeLabels = {
+        'controller': 'Controllers',
+        'entity': 'Entities',
+        'repository': 'Repositories',
+        'service': 'Services',
+        'template': 'Templates',
+        'mixed': 'Mixed PHP / HTML',
+        'php': 'Other PHP',
+        'unknown': 'Unknown'
+    } %}
+
+    {% if fileTypes is not empty %}
+        <div class="section">
+            <h2>3. Code Structure</h2>
+
+            <table class="structure-table">
+                <thead>
+                    <tr>
+                        <th>File Type</th>
+                        <th class="structure-count">Files</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for type, count in fileTypes %}
+                        <tr>
+                            <td>{{ typeLabels[type]|default(type|capitalize) }}</td>
+                            <td class="structure-count">{{ count }}</td>
+                        </tr>
+                    {% endfor %}
+                    <tr>
+                        <td><strong>Total</strong></td>
+                        <td class="structure-count"><strong>{{ analysis.totalFiles }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {# 4. Migration Priorities #}
 
     <div class="section">
-        <h2>3. Migration Priorities</h2>
+        <h2>{{ fileTypes is not empty ? 4 : 3 }}. Migration Priorities</h2>
 
         <table class="priority-table">
             <thead>
@@ -405,20 +471,20 @@
         </table>
     </div>
 
-    {# 4. AI Migration Plan #}
+    {# AI Migration Plan #}
 
     <div class="section">
-        <h2>4. AI Migration Plan</h2>
+        <h2>{{ fileTypes is not empty ? 5 : 4 }}. AI Migration Plan</h2>
 
         <div class="migration-plan">
             {{ planHtml|raw }}
         </div>
     </div>
 
-    {# 5. File Analysis - Last Section #}
+    {# File Analysis - Last Section #}
 
     <div class="section">
-        <h2>5. File Analysis</h2>
+        <h2>{{ fileTypes is not empty ? 6 : 5 }}. File Analysis</h2>
 
         <p class="subtitle">
             Detailed analysis of {{ analysis.totalFiles }} PHP files.

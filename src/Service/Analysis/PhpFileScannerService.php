@@ -45,12 +45,14 @@ class PhpFileScannerService
         $totalLegacyCalls = 0;
         $totalSqlOperations = 0;
         $constantsCache = [];
+        $fileTypes = [];
 
         foreach ($finder as $file) {
             $filePath = $file->getRealPath();
             $pathConstants = $this->getPathConstantsForFile($filePath, $directory, $constantsCache);
             $structure = $this->structureAnalyzer->analyze($filePath, $pathConstants);
-
+            $fileType = $structure['fileType'];
+            $fileTypes[$fileType] = ($fileTypes[$fileType] ?? 0) + 1;
             $classCount = count($structure['classes']);
             $functionCount = count($structure['functions']);
 
@@ -64,9 +66,23 @@ class PhpFileScannerService
             $legacyCallCount = count($structure['legacyCalls']);
             $sqlOperationCount = count($structure['sqlOperations']);
 
+            $lineCount = count(file($filePath));
+
             $priorityScore = ($legacyCallCount * 5)
                 + ($databaseCallCount * 2)
-                + $sqlOperationCount;
+                + $sqlOperationCount
+                + match (true) {
+                    $lineCount >= 1000 => 5,
+                    $lineCount >= 500 => 3,
+                    $lineCount >= 200 => 1,
+                    default => 0,
+                }
+                + match (true) {
+                    $functionCount >= 30 => 4,
+                    $functionCount >= 15 => 2,
+                    $functionCount >= 8 => 1,
+                    default => 0,
+                };
 
             $priority = match (true) {
                 $priorityScore >= 10 => 'High',
@@ -84,7 +100,7 @@ class PhpFileScannerService
                 'path' => $file->getRelativePathname(),
                 'fileType' => $structure['fileType'],
                 'size' => $file->getSize(),
-                'lines' => count(file($file->getRealPath())),
+                'lines' => $lineCount,
                 'namespace' => $structure['namespace'],
                 'classes' => $structure['classes'],
                 'functions' => $structure['functions'],
@@ -106,6 +122,7 @@ class PhpFileScannerService
             'totalLegacyCalls' => $totalLegacyCalls,
             'files' => $files,
             'totalSqlOperations' => $totalSqlOperations,
+            'fileTypes' => $fileTypes,
         ];
     }
 

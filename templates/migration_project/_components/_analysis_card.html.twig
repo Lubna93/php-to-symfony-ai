@@ -69,6 +69,73 @@
         </div>
     </div>
 
+    {% set fileTypes = analysis.fileTypes|default({}) %}
+    {% set typeLabels = {
+        'controller': 'Controllers',
+        'entity': 'Entities',
+        'repository': 'Repositories',
+        'service': 'Services',
+        'template': 'Templates',
+        'mixed': 'Mixed PHP / HTML',
+        'php': 'Other PHP',
+        'unknown': 'Unknown'
+    } %}
+    {% set typeColors = {
+        'controller': '#f0a76e',
+        'entity': '#7da9d1',
+        'repository': '#85b9a1',
+        'service': '#c3a0d9',
+        'template': '#d4bd7d',
+        'mixed': '#d58f92',
+        'php': '#8e98a6',
+        'unknown': '#5c6572'
+    } %}
+
+    {% if analysis.totalFiles > 0 and fileTypes is not empty %}
+        <div class="stat-card rounded p-3 mt-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h3 class="h6 fw-semibold mb-0">Code Structure</h3>
+                <span class="text-secondary small">
+                    {{ analysis.totalFiles }} PHP files
+                </span>
+            </div>
+
+            <div class="progress mb-3"
+                 style="height: 10px; background-color: #30343b;">
+                {% for type, count in fileTypes %}
+                    <div class="progress-bar"
+                         role="progressbar"
+                         style="width: {{ (count / analysis.totalFiles * 100)|round(2) }}%; background-color: {{ typeColors[type]|default('#8e98a6') }};"
+                         aria-label="{{ typeLabels[type]|default(type|capitalize) }}"
+                         aria-valuenow="{{ count }}"
+                         aria-valuemin="0"
+                         aria-valuemax="{{ analysis.totalFiles }}">
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="row g-3">
+                {% for type, count in fileTypes %}
+                    <div class="col-6 col-md-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="rounded-circle flex-shrink-0"
+                                  style="width: 9px; height: 9px; background-color: {{ typeColors[type]|default('#8e98a6') }};">
+                            </span>
+
+                            <span class="text-secondary small">
+                                {{ typeLabels[type]|default(type|capitalize) }}
+                            </span>
+
+                            <span class="fw-semibold small ms-auto">
+                                {{ count }}
+                            </span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
     {% if analysis.totalFiles > 0 %}
         <div class="d-flex flex-wrap justify-content-end gap-2 mt-4">
             <button type="button"
