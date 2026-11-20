@@ -18,12 +18,14 @@ security:
             logout:
                 path: app_logout
                 target: app_home
+                enable_csrf: true
             entry_point: App\Security\AuthenticationEntryPoint
 
     access_control:
         - { path: ^/admin(?:/|$), roles: ROLE_ADMIN }
         - { path: ^/connect/github/check$, roles: PUBLIC_ACCESS }
         - { path: ^/connect/github$, roles: PUBLIC_ACCESS }
+        - { path: ^/demo-login$, roles: PUBLIC_ACCESS }
         - { path: ^/projects(?:/|$), roles: ROLE_USER }
 
 when@test:

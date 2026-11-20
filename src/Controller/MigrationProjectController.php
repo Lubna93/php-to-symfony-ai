@@ -33,6 +33,7 @@ use Symfony\Component\Filesystem\Filesystem;
 use Psr\Log\LoggerInterface;
 use League\CommonMark\CommonMarkConverter;
 use Twig\Environment;
+use App\Exception\SensitiveFileException;
 
 #[IsGranted('ROLE_USER')]
 class MigrationProjectController extends AbstractController
@@ -269,7 +270,8 @@ class MigrationProjectController extends AbstractController
         MigrationProject $project,
         Request $request,
         ProjectSourceFileService $sourceFileService,
-        PhpCodeMigrationService $codeMigrationService
+        PhpCodeMigrationService $codeMigrationService,
+        LoggerInterface $logger
     ): JsonResponse {
         try {
             $this->denyAccessUnlessOwner($project);
@@ -302,7 +304,15 @@ class MigrationProjectController extends AbstractController
             return $this->json([
                 'error' => $e->getMessage(),
             ], $e->getStatusCode());
+        } catch (SensitiveFileException $e) {
+            return $this->json([
+                'error' => $e->getMessage(),
+            ], 422);
         } catch (\Throwable $e) {
+            $logger->error('Code migration failed.', [
+                'exception' => $e,
+            ]);
+
             return $this->json([
                 'error' => 'Code migration failed. Check the application logs.',
             ], 500);
