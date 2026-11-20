@@ -26,6 +26,13 @@ use App\Service\Analysis\FrameworkDetectorService;
 use App\Entity\User;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use App\Repository\MigrationProjectRepository;
+use App\Service\Migration\Generator\ProjectGenerationManager;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\Filesystem\Filesystem;
+use Psr\Log\LoggerInterface;
+use League\CommonMark\CommonMarkConverter;
+use Twig\Environment;
 
 #[IsGranted('ROLE_USER')]
 class MigrationProjectController extends AbstractController
@@ -96,7 +103,7 @@ class MigrationProjectController extends AbstractController
 
             try {
                 $filename = $uploadService->upload($file, $project);
-
+                $this->clearGeneratedArchive($project);
                 $project->setArchiveFilename($filename);
                 $project->setStatus(StatusType::UPLOADED);
 
@@ -133,6 +140,14 @@ class MigrationProjectController extends AbstractController
             ? $planReader->renderHtml($migrationPlan)
             : null;
 
+        $generatedZipPath = sprintf(
+            '%s/var/storage/projects/%d/symfony-generated.zip',
+            $this->getParameter('kernel.project_dir'),
+            $project->getId()
+        );
+
+        $hasGeneratedArchive = is_file($generatedZipPath);
+
         return $this->render('migration_project/show.html.twig', [
             'project' => $project,
             'uploadForm' => $form,
@@ -140,6 +155,7 @@ class MigrationProjectController extends AbstractController
             'migrationPlan' => $migrationPlan,
             'migrationPlanHtml' => $migrationPlanHtml,
             'detectedFramework' => $detectedFramework,
+            'hasGeneratedArchive' => $hasGeneratedArchive,
         ]);
     }
 
@@ -309,6 +325,102 @@ class MigrationProjectController extends AbstractController
         }
     }
 
+    #[Route('/projects/{uid}/generate-archive', name: 'app_project_generate_archive', methods: ['POST'])]
+    public function generateArchive(
+        #[MapEntity(mapping: ['uid' => 'uid'])]
+        MigrationProject $project,
+        Request $request,
+        ProjectGenerationManager $generationManager,
+        LoggerInterface $logger
+    ): Response {
+        $this->denyAccessUnlessOwner($project);
+
+        if (!$this->isCsrfTokenValid(
+            'generate-archive' . $project->getId(),
+            $request->request->get('_token')
+        )) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
+        if ($project->getStatus() !== StatusType::EXTRACTED) {
+            throw $this->createAccessDeniedException('Project must be extracted first.');
+        }
+
+        if ($project->getSourceFramework() !== 'Plain PHP') {
+            throw $this->createAccessDeniedException('Unsupported source framework.');
+        }
+
+        $outputDirectory = sprintf(
+            '%s/var/storage/projects/%d',
+            $this->getParameter('kernel.project_dir'),
+            $project->getId()
+        );
+
+        try {
+            $generationManager->generateArchive(
+                $project,
+                $outputDirectory,
+                regenerate: true
+            );
+
+            $this->addFlash('success', 'Symfony files generated successfully.');
+
+        } catch (\Throwable $e) {
+            $logger->error('Project generation failed', [
+                'projectId' => $project->getId(),
+                'exception' => $e,
+            ]);
+
+            $this->addFlash(
+                'danger',
+                'Project generation failed. Check the application logs.'
+            );
+        }
+        return $this->redirectToRoute('app_project_show', [
+            'uid' => $project->getUid()->toRfc4122(),
+        ]);
+    }
+
+    private function clearGeneratedArchive(MigrationProject $project): void
+    {
+        $projectDirectory = sprintf(
+            '%s/var/storage/projects/%d',
+            $this->getParameter('kernel.project_dir'),
+            $project->getId()
+        );
+
+        $filesystem = new Filesystem();
+
+        $filesystem->remove([
+            $projectDirectory . '/symfony-generated.zip',
+            $projectDirectory . '/generated',
+        ]);
+    }
+
+    #[Route('/projects/{uid}/download-archive', name: 'app_project_download_archive', methods: ['GET'])]
+    public function downloadArchive(
+        #[MapEntity(mapping: ['uid' => 'uid'])]
+        MigrationProject $project
+    ): BinaryFileResponse {
+        $this->denyAccessUnlessOwner($project);
+
+        $zipPath = sprintf(
+            '%s/var/storage/projects/%d/symfony-generated.zip',
+            $this->getParameter('kernel.project_dir'),
+            $project->getId()
+        );
+
+        if (!is_file($zipPath)) {
+            throw $this->createNotFoundException('Generated archive not found.');
+        }
+
+        return $this->file(
+            $zipPath,
+            'symfony-generated.zip',
+            ResponseHeaderBag::DISPOSITION_ATTACHMENT
+        );
+    }
+
     private function denyAccessUnlessOwner(MigrationProject $project): void
     {
         $user = $this->getUser();
@@ -318,6 +430,93 @@ class MigrationProjectController extends AbstractController
                 'You do not have access to this project.'
             );
         }
+    }
+
+    #[Route('/projects/{uid}/download-report', name: 'app_project_download_report', methods: ['GET'])]
+    public function downloadReport(
+        #[MapEntity(mapping: ['uid' => 'uid'])]
+        MigrationProject $project,
+        PhpFileScannerService $scanner,
+        FrameworkDetectorService $frameworkDetector,
+        Environment $twig
+    ): Response {
+        $this->denyAccessUnlessOwner($project);
+
+        $projectDirectory = sprintf(
+            '%s/var/storage/projects/%d',
+            $this->getParameter('kernel.project_dir'),
+            $project->getId()
+        );
+
+        $planPath = $projectDirectory . '/migration-plan.md';
+
+        if (!is_file($planPath)) {
+            throw $this->createNotFoundException(
+                'Migration plan not found.'
+            );
+        }
+
+        $analysis = $scanner->scanProject($project);
+
+        $extractedPath = sprintf(
+            '%s/var/storage/projects/%d/extracted',
+            $this->getParameter('kernel.project_dir'),
+            $project->getId()
+        );
+
+        $detectedFramework = $frameworkDetector->detect($extractedPath);
+
+        $totalLines = array_sum(
+            array_column($analysis['files'], 'lines')
+        );
+
+        $priorities = [
+            'High' => 0,
+            'Medium' => 0,
+            'Low' => 0,
+        ];
+
+        foreach ($analysis['files'] as $file) {
+            $priority = $file['priority'];
+
+            if (isset($priorities[$priority])) {
+                $priorities[$priority]++;
+            }
+        }
+
+        $converter = new CommonMarkConverter();
+
+        $planHtml = $converter->convert(
+            file_get_contents($planPath)
+        )->getContent();
+
+        $html = $twig->render(
+            'migration_project/report.html.twig',
+            [
+                'project' => $project,
+                'analysis' => $analysis,
+                'totalLines' => $totalLines,
+                'priorities' => $priorities,
+                'planHtml' => $planHtml,
+                'detectedFramework' => $detectedFramework,
+                'generatedAt' => new \DateTimeImmutable(),
+            ]
+        );
+
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        return new Response(
+            $dompdf->output(),
+            200,
+            [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' =>
+                    'attachment; filename="migration-report.pdf"',
+            ]
+        );
     }
 
 }

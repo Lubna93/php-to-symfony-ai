@@ -6,13 +6,11 @@ use PhpParser\Node;
 use PhpParser\NodeFinder;
 use PhpParser\ParserFactory;
 use PhpParser\Node\Expr\BinaryOp\Concat;
+use PhpParser\Error;
 
 class PhpStructureAnalyzerService
 {
-    public function analyze(
-        string $filePath,
-        array $projectConstants = []
-    ): array
+    public function analyze(string $filePath, array $projectConstants = []): array
     {
         $code = file_get_contents($filePath);
 
@@ -21,8 +19,32 @@ class PhpStructureAnalyzerService
         }
 
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
-        $nodes = $parser->parse($code) ?? [];
 
+        try {
+            $nodes = $parser->parse($code) ?? [];
+        } catch (Error $e) {
+            error_log(sprintf(
+                'PHP parsing failed for %s: %s',
+                $filePath,
+                $e->getMessage()
+            ));
+
+            return [
+                'fileType' => 'unknown',
+                'namespace' => null,
+                'classes' => [],
+                'functions' => [],
+                'dependencies' => [
+                    'uses' => [],
+                    'includes' => [],
+                    'extends' => [],
+                    'implements' => [],
+                ],
+                'databaseCalls' => [],
+                'legacyCalls' => [],
+                'sqlOperations' => [],
+            ];
+        }
         $finder = new NodeFinder();
         $constants = array_merge(
             $projectConstants,
@@ -213,7 +235,18 @@ class PhpStructureAnalyzerService
         }
 
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
-        $nodes = $parser->parse($code) ?? [];
+
+        try {
+            $nodes = $parser->parse($code) ?? [];
+        } catch (Error $e) {
+            error_log(sprintf(
+                'PHP config parsing failed for %s: %s',
+                $configPath,
+                $e->getMessage()
+            ));
+
+            return [];
+        }
 
         return $this->extractPathConstants($nodes, $configPath);
     }
@@ -329,17 +362,47 @@ class PhpStructureAnalyzerService
     {
         $finder = new NodeFinder();
 
-        $classes = $finder->findInstanceOf($nodes, Node\Stmt\Class_::class);
+        $classes = $finder->findInstanceOf(
+            $nodes,
+            Node\Stmt\Class_::class
+        );
 
         foreach ($classes as $class) {
+            if ($class->isAnonymous()) {
+                continue;
+            }
+
             $name = $class->name?->toString() ?? '';
             $parent = $class->extends?->toString() ?? '';
+
+            $attributes = $class->attrGroups;
+
+            foreach ($attributes as $group) {
+                foreach ($group->attrs as $attribute) {
+                    $attributeName = $attribute->name->toString();
+
+                    if (
+                        $attributeName === 'ORM\Entity'
+                        || $attributeName === 'Doctrine\ORM\Mapping\Entity'
+                    ) {
+                        return 'entity';
+                    }
+                }
+            }
 
             if (
                 str_ends_with($name, 'Controller')
                 || str_ends_with($parent, 'Controller')
             ) {
                 return 'controller';
+            }
+
+            if (str_ends_with($name, 'Repository')) {
+                return 'repository';
+            }
+
+            if (str_ends_with($name, 'Service')) {
+                return 'service';
             }
         }
 

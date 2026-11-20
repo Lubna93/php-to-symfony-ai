@@ -19,6 +19,29 @@ final class ProjectSourceFileService
     ) {
     }
 
+    public function getPhpFilePaths(MigrationProject $project): array
+    {
+        $directory = sprintf(
+            '%s/var/storage/projects/%d/extracted',
+            $this->projectDir,
+            $project->getId()
+        );
+
+        $rootPath = realpath($directory);
+
+        if ($rootPath === false) {
+            throw new NotFoundHttpException('Project directory not found.');
+        }
+
+        $analysis = $this->scanner->scan($rootPath);
+
+        return array_values(array_filter(
+            array_column($analysis['files'], 'path'),
+            fn (string $path): bool =>
+                !$this->sensitiveDataFilter->isSensitiveFile($path)
+        ));
+    }
+
     public function getSelectedPhpFile(
         MigrationProject $project,
         mixed $requestedPath
