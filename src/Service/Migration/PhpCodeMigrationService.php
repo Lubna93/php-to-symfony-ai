@@ -7,7 +7,7 @@ use App\Service\Security\SensitiveDataFilterService;
 use Symfony\AI\Agent\AgentInterface;
 use Symfony\AI\Platform\Message\Message;
 use Symfony\AI\Platform\Message\MessageBag;
-
+use App\Exception\SensitiveFileException;
 final class PhpCodeMigrationService
 {
     public function __construct(
@@ -26,8 +26,8 @@ final class PhpCodeMigrationService
         string $targetFramework
     ): string {
         if ($this->sensitiveDataFilter->isSensitiveFile($filePath)) {
-            throw new \RuntimeException(
-                'This file may contain sensitive configuration and cannot be sent to AI.'
+            throw new SensitiveFileException(
+                'This file is excluded from AI migration because it may contain sensitive configuration.'
             );
         }
 
