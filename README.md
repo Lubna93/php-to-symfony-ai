@@ -52,13 +52,9 @@ Upload. Explore. Plan. Take the next step. ✨
 
 ## Try it locally
 
-You’ll need **Git**, **Docker with Docker Compose**, an **OpenAI API key with available API credit**, and **GitHub OAuth credentials** for sign-in.
+You’ll need **Git**, **Docker with Docker Compose**, and an **OpenAI API key with available API credit**.
 
-Create your GitHub OAuth App in
-[GitHub Developer Settings](https://github.com/settings/developers).
-
-Set the Homepage URL to `http://localhost:8090`
-and configure the callback URL to match your application's GitHub OAuth route.
+No GitHub OAuth setup needed to try it — use **Try Demo** to sign in locally.
 
 ### 1. Get the code
 
@@ -69,13 +65,13 @@ cd php-to-symfony-ai
 
 ### 2. Add your settings
 
-Create a `.env.local` file in the project root and add your OpenAI API key and GitHub OAuth credentials:
+Create a `.env.local` file in the project root:
 
 ```dotenv
 OPENAI_API_KEY=your_openai_api_key
-OAUTH_GITHUB_CLIENT_ID=your_github_client_id
-OAUTH_GITHUB_CLIENT_SECRET=your_github_client_secret
 ```
+
+Database settings are already configured in Docker Compose.
 
 Keep `.env.local` private. Never commit API keys or OAuth secrets.
 
@@ -97,10 +93,25 @@ docker compose exec app php bin/console doctrine:migrations:migrate --no-interac
 
 ### 5. Open the application
 
-Visit **http://localhost:8090**, sign in with GitHub, and create your first migration project.
+Visit **http://localhost:8090**, click **Try Demo**, and create your first migration project.
+
+Demo login is available only in the `dev` environment, which is enabled in the included Docker Compose configuration.
 
 Upload a ZIP, explore the analysis, and generate your migration plan. Nice — you have a starting point!
 
+
+### Optional: GitHub sign-in
+
+To use **Continue with GitHub**, create an OAuth App in [GitHub Developer Settings](https://github.com/settings/developers).
+
+Set the Homepage URL to `http://localhost:8090` and the Authorization callback URL to `http://localhost:8090/connect/github/check`.
+
+Add your credentials to `.env.local`:
+
+```dotenv
+OAUTH_GITHUB_CLIENT_ID=your_github_client_id
+OAUTH_GITHUB_CLIENT_SECRET=your_github_client_secret
+```
 
 ## Why Symfony AI?
 
@@ -112,9 +123,9 @@ Instead of starting with a blank chat box, you start with your project’s struc
 
 ## Before you upload
 
-Use a sample project for your first run.
+Use a sample project for your first run. Need a sample? [Download the Plain PHP blog ZIP](https://github.com/Lubna93/native-php-blog-test/archive/refs/heads/main.zip) and upload it to get started.
 
-Sensitive files are excluded from code analysis but as an extra precaution, remove secrets and confidential data from your ZIP before uploading.
+Files identified as sensitive are excluded from AI code migration. As an extra precaution, remove secrets and confidential data from your ZIP before uploading.
 
 AI features send the context prepared by the application to OpenAI for processing. Running the application locally does not mean AI processing stays on your machine.
 
