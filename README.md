@@ -13,6 +13,11 @@
 ![PHP-Parser](https://img.shields.io/badge/PHP--Parser-777BB4?style=flat-square)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-7952B3?style=flat-square&logo=bootstrap&logoColor=white)
 
+<br>
+
+[![Watch Demo](https://img.shields.io/badge/Watch_Demo-282C34?style=for-the-badge&logo=youtube&logoColor=FF6B81)](https://www.youtube.com/watch?v=gPjgmnn-SzQ)
+[![Read Article](https://img.shields.io/badge/Read_the_Article-282C34?style=for-the-badge&logo=medium&logoColor=FFAA91)](https://medium.com/@lubna.altungi/php2symfony-ai-your-little-assistant-for-migrating-to-symfony-b2f0243af865)
+
 </div>
 
 Old PHP application, years of code, and no idea where to start?
@@ -134,7 +139,7 @@ Generated plans and code are starting points: review them, adapt them, and test 
 
 ## About
 
-Built solo for the [Symfony AI & MCP Hackathon 2026](https://symfony.com/hackathon), using Symfony AI.
+Built for the [Symfony AI & MCP Hackathon 2026](https://symfony.com/hackathon), using Symfony AI.
 
 
 <p align="center">
